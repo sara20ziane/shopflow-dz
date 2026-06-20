@@ -321,6 +321,37 @@ function App() {
     }
   };
 
+  const handleUpdatePayment = async (order, newDepositValue) => {
+    resetMessage();
+
+    const sellingPrice = Number(order.sellingPrice || 0);
+    const deposit = Number(newDepositValue || 0);
+
+    if (deposit < 0) {
+      setMessage("L'acompte ne peut pas être négatif.");
+      return false;
+    }
+
+    if (deposit > sellingPrice) {
+      setMessage("L'acompte ne peut pas dépasser le prix de vente.");
+      return false;
+    }
+
+    try {
+      await updateDoc(doc(db, "orders", order.id), {
+        deposit,
+        remaining: sellingPrice - deposit,
+        updatedAt: serverTimestamp(),
+      });
+
+      setMessage("Paiement mis à jour.");
+      return true;
+    } catch (error) {
+      setMessage("Erreur lors de la mise à jour du paiement.");
+      return false;
+    }
+  };
+
   const handleUpdateOrder = async (orderId, formData) => {
     resetMessage();
 
@@ -524,11 +555,14 @@ function App() {
             onDeleteOrder={handleDeleteOrder}
           />
         )}
+        {page === "payments" && (
+          <Payments orders={orders} onUpdatePayment={handleUpdatePayment} />
+        )}
         {page === "clients" && <Clients clients={clients} />}
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200">
-        <div className="max-w-md mx-auto grid grid-cols-4">
+        <div className="max-w-md mx-auto grid grid-cols-5">
           <NavButton
             active={page === "dashboard"}
             onClick={() => setPage("dashboard")}
@@ -545,7 +579,12 @@ function App() {
           <NavButton
             active={page === "orders"}
             onClick={() => setPage("orders")}
-            label="Commandes"
+            label="Cmdes"
+          />
+          <NavButton
+            active={page === "payments"}
+            onClick={() => setPage("payments")}
+            label="Paiements"
           />
           <NavButton
             active={page === "clients"}
@@ -854,6 +893,229 @@ function OrderCard({ order, onStatusChange, onEdit, onDeleteOrder }) {
   );
 }
 
+function Payments({ orders, onUpdatePayment }) {
+  const [searchText, setSearchText] = useState("");
+  const [paymentFilter, setPaymentFilter] = useState("À encaisser");
+
+  const activeOrders = useMemo(
+    () => orders.filter((order) => order.status !== "Annulée" && order.status !== "Retour"),
+    [orders]
+  );
+
+  const paymentStats = useMemo(() => {
+    const totalDeposits = activeOrders.reduce(
+      (sum, order) => sum + Number(order.deposit || 0),
+      0
+    );
+
+    const totalRemaining = activeOrders.reduce(
+      (sum, order) => sum + Number(order.remaining || 0),
+      0
+    );
+
+    return {
+      totalDeposits,
+      totalRemaining,
+      unpaidOrders: activeOrders.filter((order) => Number(order.remaining || 0) > 0).length,
+      paidOrders: activeOrders.filter((order) => Number(order.remaining || 0) === 0).length,
+    };
+  }, [activeOrders]);
+
+  const filteredOrders = useMemo(() => {
+    const cleanSearch = searchText.toLowerCase().trim();
+
+    return activeOrders.filter((order) => {
+      const remaining = Number(order.remaining || 0);
+      const matchesFilter =
+        paymentFilter === "Tous" ||
+        (paymentFilter === "À encaisser" && remaining > 0) ||
+        (paymentFilter === "Soldées" && remaining === 0);
+
+      const searchableText = `${order.customerName || ""} ${
+        order.customerPhone || ""
+      } ${order.productName || ""}`.toLowerCase();
+
+      const matchesSearch =
+        cleanSearch.length === 0 || searchableText.includes(cleanSearch);
+
+      return matchesFilter && matchesSearch;
+    });
+  }, [activeOrders, searchText, paymentFilter]);
+
+  return (
+    <section>
+      <h2 className="text-2xl font-bold text-slate-900">Paiements</h2>
+      <p className="text-slate-500 mt-1">Acomptes et restes à encaisser</p>
+
+      <div className="grid grid-cols-2 gap-4 mt-6">
+        <StatCard label="Acomptes" value={`${formatAmount(paymentStats.totalDeposits)} DA`} />
+        <StatCard label="À encaisser" value={`${formatAmount(paymentStats.totalRemaining)} DA`} />
+        <StatCard label="Non soldées" value={paymentStats.unpaidOrders} />
+        <StatCard label="Soldées" value={paymentStats.paidOrders} />
+      </div>
+
+      <div className="mt-5 bg-white rounded-3xl p-4 shadow-sm space-y-3">
+        <input
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          placeholder="Rechercher cliente, téléphone ou produit"
+          className="w-full bg-slate-100 rounded-2xl p-4 outline-none"
+        />
+
+        <select
+          value={paymentFilter}
+          onChange={(e) => setPaymentFilter(e.target.value)}
+          className="w-full bg-slate-100 rounded-2xl p-4 outline-none"
+        >
+          <option>À encaisser</option>
+          <option>Soldées</option>
+          <option>Tous</option>
+        </select>
+
+        <p className="text-sm text-slate-500">
+          {filteredOrders.length} commande(s) affichée(s)
+        </p>
+      </div>
+
+      {activeOrders.length === 0 ? (
+        <div className="bg-white rounded-3xl p-6 shadow-sm text-center mt-6">
+          <p className="text-slate-500">Aucun paiement à suivre pour le moment.</p>
+        </div>
+      ) : filteredOrders.length === 0 ? (
+        <div className="bg-white rounded-3xl p-6 shadow-sm text-center mt-6">
+          <p className="text-slate-500">Aucun paiement ne correspond au filtre.</p>
+        </div>
+      ) : (
+        <div className="mt-6 space-y-3">
+          {filteredOrders.map((order) => (
+            <PaymentCard
+              key={order.id}
+              order={order}
+              onUpdatePayment={onUpdatePayment}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function PaymentCard({ order, onUpdatePayment }) {
+  const [depositValue, setDepositValue] = useState(String(order.deposit || ""));
+
+  useEffect(() => {
+    setDepositValue(String(order.deposit || ""));
+  }, [order.deposit]);
+
+  const sellingPrice = Number(order.sellingPrice || 0);
+  const deposit = Number(order.deposit || 0);
+  const remaining = Number(order.remaining || 0);
+  const currentInputDeposit = Number(depositValue || 0);
+  const whatsappNumber = getWhatsAppNumber(order.customerPhone);
+  const reminderText = encodeURIComponent(
+    `Bonjour ${order.customerName}, il reste ${formatAmount(remaining)} DA à régler pour votre commande ${order.productName}. Merci.`
+  );
+
+  const updateDeposit = async (newValue) => {
+    const safeValue = Math.max(0, Math.min(sellingPrice, Number(newValue || 0)));
+    setDepositValue(String(safeValue));
+    await onUpdatePayment(order, safeValue);
+  };
+
+  return (
+    <div className="bg-white rounded-3xl p-4 shadow-sm">
+      <div className="flex justify-between gap-3">
+        <div>
+          <h3 className="font-bold text-slate-900">{order.customerName}</h3>
+          <p className="text-slate-500 text-sm">{order.productName}</p>
+        </div>
+
+        <span
+          className={`rounded-full px-3 py-2 text-xs font-semibold h-fit ${
+            remaining === 0
+              ? "bg-green-50 text-green-700"
+              : "bg-orange-50 text-orange-700"
+          }`}
+        >
+          {remaining === 0 ? "Soldée" : "À encaisser"}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 mt-4 text-sm">
+        <div className="bg-slate-100 rounded-2xl p-3">
+          <p className="text-slate-500">Total</p>
+          <p className="font-bold">{formatAmount(sellingPrice)} DA</p>
+        </div>
+
+        <div className="bg-slate-100 rounded-2xl p-3">
+          <p className="text-slate-500">Payé</p>
+          <p className="font-bold">{formatAmount(deposit)} DA</p>
+        </div>
+
+        <div className="bg-slate-100 rounded-2xl p-3">
+          <p className="text-slate-500">Reste</p>
+          <p className="font-bold">{formatAmount(remaining)} DA</p>
+        </div>
+      </div>
+
+      <div className="mt-4 space-y-2">
+        <input
+          value={depositValue}
+          onChange={(e) => setDepositValue(e.target.value)}
+          type="number"
+          placeholder="Montant total payé"
+          className="w-full bg-slate-100 rounded-2xl p-4 outline-none"
+        />
+
+        <button
+          type="button"
+          onClick={() => onUpdatePayment(order, depositValue)}
+          className="w-full bg-slate-900 text-white rounded-2xl p-3 text-sm font-semibold"
+        >
+          Enregistrer paiement
+        </button>
+
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            type="button"
+            onClick={() => updateDeposit(currentInputDeposit + 500)}
+            className="bg-slate-100 text-slate-700 rounded-2xl p-3 text-sm font-semibold"
+          >
+            +500
+          </button>
+
+          <button
+            type="button"
+            onClick={() => updateDeposit(currentInputDeposit + 1000)}
+            className="bg-slate-100 text-slate-700 rounded-2xl p-3 text-sm font-semibold"
+          >
+            +1000
+          </button>
+
+          <button
+            type="button"
+            onClick={() => updateDeposit(sellingPrice)}
+            className="bg-green-50 text-green-700 rounded-2xl p-3 text-sm font-semibold"
+          >
+            Soldée
+          </button>
+        </div>
+
+        {whatsappNumber && remaining > 0 && (
+          <a
+            href={`https://wa.me/${whatsappNumber}?text=${reminderText}`}
+            target="_blank"
+            rel="noreferrer"
+            className="block w-full bg-green-50 text-green-700 rounded-2xl p-3 text-sm font-semibold text-center"
+          >
+            Relancer sur WhatsApp
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Clients({ clients }) {
   const [searchText, setSearchText] = useState("");
 
@@ -1040,7 +1302,7 @@ function NavButton({ active, onClick, label }) {
   return (
     <button
       onClick={onClick}
-      className={`py-4 text-xs font-semibold ${
+      className={`py-4 text-[11px] font-semibold ${
         active ? "text-slate-900" : "text-slate-400"
       }`}
     >
