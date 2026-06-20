@@ -128,6 +128,56 @@ function App() {
     };
   }, [orders]);
 
+  const clients = useMemo(() => {
+    const clientsMap = new Map();
+
+    orders.forEach((order) => {
+      const name = order.customerName || "Cliente sans nom";
+      const phone = order.customerPhone || "";
+      const key = (phone || name || order.id).trim().toLowerCase();
+      const isActive = order.status !== "Annulée" && order.status !== "Retour";
+      const orderDate = order.createdAt?.seconds || 0;
+
+      if (!clientsMap.has(key)) {
+        clientsMap.set(key, {
+          id: key,
+          name,
+          phone,
+          totalOrders: 0,
+          activeOrders: 0,
+          totalSpent: 0,
+          totalDeposits: 0,
+          totalRemaining: 0,
+          latestStatus: order.status || "Nouvelle",
+          latestDate: orderDate,
+          orders: [],
+        });
+      }
+
+      const client = clientsMap.get(key);
+      client.totalOrders += 1;
+      client.orders.push(order);
+
+      if (isActive) {
+        client.activeOrders += 1;
+        client.totalSpent += Number(order.sellingPrice || 0);
+        client.totalDeposits += Number(order.deposit || 0);
+        client.totalRemaining += Number(order.remaining || 0);
+      }
+
+      if (orderDate >= client.latestDate) {
+        client.name = name;
+        client.phone = phone || client.phone;
+        client.latestStatus = order.status || client.latestStatus;
+        client.latestDate = orderDate;
+      }
+    });
+
+    return Array.from(clientsMap.values()).sort(
+      (a, b) => b.latestDate - a.latestDate
+    );
+  }, [orders]);
+
   const resetMessage = () => {
     setMessage("");
   };
@@ -474,10 +524,11 @@ function App() {
             onDeleteOrder={handleDeleteOrder}
           />
         )}
+        {page === "clients" && <Clients clients={clients} />}
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200">
-        <div className="max-w-md mx-auto grid grid-cols-3">
+        <div className="max-w-md mx-auto grid grid-cols-4">
           <NavButton
             active={page === "dashboard"}
             onClick={() => setPage("dashboard")}
@@ -495,6 +546,11 @@ function App() {
             active={page === "orders"}
             onClick={() => setPage("orders")}
             label="Commandes"
+          />
+          <NavButton
+            active={page === "clients"}
+            onClick={() => setPage("clients")}
+            label="Clients"
           />
         </div>
       </nav>
@@ -798,6 +854,111 @@ function OrderCard({ order, onStatusChange, onEdit, onDeleteOrder }) {
   );
 }
 
+function Clients({ clients }) {
+  const [searchText, setSearchText] = useState("");
+
+  const filteredClients = useMemo(() => {
+    const cleanSearch = searchText.toLowerCase().trim();
+
+    return clients.filter((client) => {
+      const searchableText = `${client.name || ""} ${client.phone || ""}`.toLowerCase();
+      return cleanSearch.length === 0 || searchableText.includes(cleanSearch);
+    });
+  }, [clients, searchText]);
+
+  return (
+    <section>
+      <h2 className="text-2xl font-bold text-slate-900">Clients</h2>
+      <p className="text-slate-500 mt-1">Liste automatique depuis tes commandes</p>
+
+      <div className="mt-5 bg-white rounded-3xl p-4 shadow-sm space-y-3">
+        <input
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          placeholder="Rechercher cliente ou téléphone"
+          className="w-full bg-slate-100 rounded-2xl p-4 outline-none"
+        />
+
+        <p className="text-sm text-slate-500">
+          {filteredClients.length} cliente(s) affichée(s)
+        </p>
+      </div>
+
+      {clients.length === 0 ? (
+        <div className="bg-white rounded-3xl p-6 shadow-sm text-center mt-6">
+          <p className="text-slate-500">Aucune cliente pour le moment.</p>
+        </div>
+      ) : filteredClients.length === 0 ? (
+        <div className="bg-white rounded-3xl p-6 shadow-sm text-center mt-6">
+          <p className="text-slate-500">Aucune cliente ne correspond à la recherche.</p>
+        </div>
+      ) : (
+        <div className="mt-6 space-y-3">
+          {filteredClients.map((client) => (
+            <ClientCard key={client.id} client={client} />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ClientCard({ client }) {
+  const whatsappNumber = getWhatsAppNumber(client.phone);
+
+  return (
+    <div className="bg-white rounded-3xl p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-bold text-slate-900">{client.name}</h3>
+          {client.phone ? (
+            <p className="text-sm text-slate-500">{client.phone}</p>
+          ) : (
+            <p className="text-sm text-slate-400">Téléphone non renseigné</p>
+          )}
+        </div>
+
+        <span className="bg-slate-100 text-slate-700 rounded-full px-3 py-2 text-xs font-semibold">
+          {client.latestStatus}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 mt-4 text-sm">
+        <div className="bg-slate-100 rounded-2xl p-3">
+          <p className="text-slate-500">Commandes</p>
+          <p className="font-bold">{client.totalOrders}</p>
+        </div>
+
+        <div className="bg-slate-100 rounded-2xl p-3">
+          <p className="text-slate-500">Actives</p>
+          <p className="font-bold">{client.activeOrders}</p>
+        </div>
+
+        <div className="bg-slate-100 rounded-2xl p-3">
+          <p className="text-slate-500">Total</p>
+          <p className="font-bold">{formatAmount(client.totalSpent)} DA</p>
+        </div>
+
+        <div className="bg-slate-100 rounded-2xl p-3">
+          <p className="text-slate-500">Reste</p>
+          <p className="font-bold">{formatAmount(client.totalRemaining)} DA</p>
+        </div>
+      </div>
+
+      {whatsappNumber && (
+        <a
+          href={`https://wa.me/${whatsappNumber}`}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-4 block w-full bg-green-50 text-green-700 rounded-2xl p-3 text-sm font-semibold text-center"
+        >
+          Contacter sur WhatsApp
+        </a>
+      )}
+    </div>
+  );
+}
+
 function OrderFields({ form, onChange }) {
   return (
     <>
@@ -879,7 +1040,7 @@ function NavButton({ active, onClick, label }) {
   return (
     <button
       onClick={onClick}
-      className={`py-4 text-sm font-semibold ${
+      className={`py-4 text-xs font-semibold ${
         active ? "text-slate-900" : "text-slate-400"
       }`}
     >
@@ -890,6 +1051,24 @@ function NavButton({ active, onClick, label }) {
 
 function formatAmount(value) {
   return Number(value || 0).toLocaleString("fr-FR");
+}
+
+function getWhatsAppNumber(phone) {
+  const digits = String(phone || "").replace(/\D/g, "");
+
+  if (!digits) {
+    return "";
+  }
+
+  if (digits.startsWith("213")) {
+    return digits;
+  }
+
+  if (digits.startsWith("0")) {
+    return `213${digits.slice(1)}`;
+  }
+
+  return digits;
 }
 
 export default App;
