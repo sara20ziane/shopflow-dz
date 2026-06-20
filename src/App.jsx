@@ -13,6 +13,7 @@ import {
   where,
   serverTimestamp,
   updateDoc,
+  deleteDoc,
   doc,
 } from "firebase/firestore";
 import { auth, db } from "./firebase";
@@ -58,9 +59,9 @@ function App() {
     const q = query(collection(db, "orders"), where("userId", "==", user.uid));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const ordersData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
+      const ordersData = snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data(),
       }));
 
       const sortedOrders = ordersData.sort((a, b) => {
@@ -254,6 +255,25 @@ function App() {
     }
   };
 
+  const handleDeleteOrder = async (orderId) => {
+    resetMessage();
+
+    const confirmed = window.confirm(
+      "Supprimer cette commande ? Cette action est définitive."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, "orders", orderId));
+      setMessage("Commande supprimée.");
+    } catch (error) {
+      setMessage("Erreur lors de la suppression de la commande.");
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center p-5">
@@ -384,7 +404,11 @@ function App() {
           />
         )}
         {page === "orders" && (
-          <Orders orders={orders} onStatusChange={handleUpdateStatus} />
+          <Orders
+            orders={orders}
+            onStatusChange={handleUpdateStatus}
+            onDeleteOrder={handleDeleteOrder}
+          />
         )}
       </main>
 
@@ -466,9 +490,7 @@ function AddOrder({ orderForm, onChange, onSubmit, loading }) {
       <h2 className="text-2xl font-bold text-slate-900">
         Nouvelle commande
       </h2>
-      <p className="text-slate-500 mt-1">
-        Ajoute une commande cliente
-      </p>
+      <p className="text-slate-500 mt-1">Ajoute une commande cliente</p>
 
       <form onSubmit={onSubmit} className="mt-6 space-y-3">
         <input
@@ -559,7 +581,7 @@ function AddOrder({ orderForm, onChange, onSubmit, loading }) {
   );
 }
 
-function Orders({ orders, onStatusChange }) {
+function Orders({ orders, onStatusChange, onDeleteOrder }) {
   return (
     <section>
       <h2 className="text-2xl font-bold text-slate-900">Commandes</h2>
@@ -626,6 +648,14 @@ function Orders({ orders, onStatusChange }) {
                   Note : {order.note}
                 </p>
               )}
+
+              <button
+                type="button"
+                onClick={() => onDeleteOrder(order.id)}
+                className="mt-4 w-full bg-red-50 text-red-600 rounded-2xl p-3 text-sm font-semibold"
+              >
+                Supprimer la commande
+              </button>
             </div>
           ))}
         </div>
