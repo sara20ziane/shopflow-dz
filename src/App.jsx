@@ -12,6 +12,8 @@ import {
   query,
   where,
   serverTimestamp,
+  updateDoc,
+  doc,
 } from "firebase/firestore";
 import { auth, db } from "./firebase";
 
@@ -238,6 +240,20 @@ function App() {
     }
   };
 
+  const handleUpdateStatus = async (orderId, newStatus) => {
+    resetMessage();
+
+    try {
+      await updateDoc(doc(db, "orders", orderId), {
+        status: newStatus,
+      });
+
+      setMessage("Statut mis à jour.");
+    } catch (error) {
+      setMessage("Erreur lors de la mise à jour du statut.");
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center p-5">
@@ -367,7 +383,9 @@ function App() {
             loading={loading}
           />
         )}
-        {page === "orders" && <Orders orders={orders} />}
+        {page === "orders" && (
+          <Orders orders={orders} onStatusChange={handleUpdateStatus} />
+        )}
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200">
@@ -541,7 +559,7 @@ function AddOrder({ orderForm, onChange, onSubmit, loading }) {
   );
 }
 
-function Orders({ orders }) {
+function Orders({ orders, onStatusChange }) {
   return (
     <section>
       <h2 className="text-2xl font-bold text-slate-900">Commandes</h2>
@@ -563,9 +581,21 @@ function Orders({ orders }) {
                   <p className="text-slate-500 text-sm">{order.productName}</p>
                 </div>
 
-                <span className="bg-slate-100 text-slate-700 rounded-full px-3 py-1 text-xs font-semibold h-fit">
-                  {order.status}
-                </span>
+                <select
+                  value={order.status}
+                  onChange={(e) => onStatusChange(order.id, e.target.value)}
+                  className="bg-slate-100 text-slate-700 rounded-full px-3 py-2 text-xs font-semibold h-fit outline-none max-w-36"
+                >
+                  <option>Nouvelle</option>
+                  <option>En attente paiement</option>
+                  <option>Confirmée</option>
+                  <option>Commandée fournisseur</option>
+                  <option>Reçue</option>
+                  <option>En livraison</option>
+                  <option>Livrée</option>
+                  <option>Annulée</option>
+                  <option>Retour</option>
+                </select>
               </div>
 
               <div className="grid grid-cols-3 gap-2 mt-4 text-sm">
