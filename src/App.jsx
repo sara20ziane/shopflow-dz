@@ -30,6 +30,15 @@ const STATUS_OPTIONS = [
   "Retour",
 ];
 
+const DELIVERY_STATUS_OPTIONS = [
+  "Confirmée",
+  "Commandée fournisseur",
+  "Reçue",
+  "En livraison",
+  "Livrée",
+  "Retour",
+];
+
 const INITIAL_ORDER_FORM = {
   customerName: "",
   customerPhone: "",
@@ -38,6 +47,8 @@ const INITIAL_ORDER_FORM = {
   purchasePrice: "",
   deposit: "",
   status: "Nouvelle",
+  deliveryCompany: "",
+  trackingCode: "",
   note: "",
 };
 
@@ -118,6 +129,7 @@ function App() {
       activeOrders: activeOrders.length,
       deliveredOrders: orders.filter((order) => order.status === "Livrée").length,
       inDeliveryOrders: orders.filter((order) => order.status === "En livraison").length,
+      readyOrders: orders.filter((order) => order.status === "Reçue").length,
       canceledOrders: orders.filter(
         (order) => order.status === "Annulée" || order.status === "Retour"
       ).length,
@@ -291,6 +303,8 @@ function App() {
         remaining,
         profit,
         status: orderForm.status,
+        deliveryCompany: orderForm.deliveryCompany.trim(),
+        trackingCode: orderForm.trackingCode.trim(),
         note: orderForm.note.trim(),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -352,6 +366,25 @@ function App() {
     }
   };
 
+  const handleUpdateDelivery = async (order, deliveryData) => {
+    resetMessage();
+
+    try {
+      await updateDoc(doc(db, "orders", order.id), {
+        status: deliveryData.status,
+        deliveryCompany: deliveryData.deliveryCompany.trim(),
+        trackingCode: deliveryData.trackingCode.trim(),
+        updatedAt: serverTimestamp(),
+      });
+
+      setMessage("Suivi livraison mis à jour.");
+      return true;
+    } catch (error) {
+      setMessage("Erreur lors de la mise à jour livraison.");
+      return false;
+    }
+  };
+
   const handleUpdateOrder = async (orderId, formData) => {
     resetMessage();
 
@@ -387,6 +420,8 @@ function App() {
         remaining,
         profit,
         status: formData.status,
+        deliveryCompany: formData.deliveryCompany.trim(),
+        trackingCode: formData.trackingCode.trim(),
         note: formData.note.trim(),
         updatedAt: serverTimestamp(),
       });
@@ -558,11 +593,14 @@ function App() {
         {page === "payments" && (
           <Payments orders={orders} onUpdatePayment={handleUpdatePayment} />
         )}
+        {page === "delivery" && (
+          <Delivery orders={orders} onUpdateDelivery={handleUpdateDelivery} />
+        )}
         {page === "clients" && <Clients clients={clients} />}
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200">
-        <div className="max-w-md mx-auto grid grid-cols-5">
+        <div className="max-w-md mx-auto grid grid-cols-6">
           <NavButton
             active={page === "dashboard"}
             onClick={() => setPage("dashboard")}
@@ -584,7 +622,12 @@ function App() {
           <NavButton
             active={page === "payments"}
             onClick={() => setPage("payments")}
-            label="Paiements"
+            label="Paiem."
+          />
+          <NavButton
+            active={page === "delivery"}
+            onClick={() => setPage("delivery")}
+            label="Livr."
           />
           <NavButton
             active={page === "clients"}
@@ -622,12 +665,12 @@ function Dashboard({ stats }) {
       <div className="grid grid-cols-2 gap-4 mt-6">
         <StatCard label="Commandes" value={stats.totalOrders} />
         <StatCard label="Actives" value={stats.activeOrders} />
+        <StatCard label="Prêtes" value={stats.readyOrders} />
         <StatCard label="En livraison" value={stats.inDeliveryOrders} />
         <StatCard label="Livrées" value={stats.deliveredOrders} />
         <StatCard label="CA total" value={`${formatAmount(stats.totalSales)} DA`} />
         <StatCard label="Acomptes" value={`${formatAmount(stats.totalDeposits)} DA`} />
         <StatCard label="Reste" value={`${formatAmount(stats.remaining)} DA`} />
-        <StatCard label="Annulées/retours" value={stats.canceledOrders} />
       </div>
 
       <div className="mt-4 bg-slate-900 text-white rounded-3xl p-5">
@@ -709,6 +752,8 @@ function Orders({ orders, onStatusChange, onUpdateOrder, onDeleteOrder }) {
       purchasePrice: String(order.purchasePrice || ""),
       deposit: String(order.deposit || ""),
       status: order.status || "Nouvelle",
+      deliveryCompany: order.deliveryCompany || "",
+      trackingCode: order.trackingCode || "",
       note: order.note || "",
     });
   };
@@ -863,6 +908,13 @@ function OrderCard({ order, onStatusChange, onEdit, onDeleteOrder }) {
           <p className="font-bold">{formatAmount(order.profit)} DA</p>
         </div>
       </div>
+
+      {(order.deliveryCompany || order.trackingCode) && (
+        <div className="mt-3 bg-slate-50 rounded-2xl p-3 text-sm text-slate-500">
+          {order.deliveryCompany && <p>Livraison : {order.deliveryCompany}</p>}
+          {order.trackingCode && <p>Suivi : {order.trackingCode}</p>}
+        </div>
+      )}
 
       {order.customerPhone && (
         <p className="mt-3 text-sm text-slate-500">Tél : {order.customerPhone}</p>
@@ -1116,6 +1168,251 @@ function PaymentCard({ order, onUpdatePayment }) {
   );
 }
 
+function Delivery({ orders, onUpdateDelivery }) {
+  const [searchText, setSearchText] = useState("");
+  const [deliveryFilter, setDeliveryFilter] = useState("À suivre");
+
+  const deliveryOrders = useMemo(
+    () =>
+      orders.filter(
+        (order) => order.status !== "Annulée" && order.status !== "Nouvelle"
+      ),
+    [orders]
+  );
+
+  const deliveryStats = useMemo(() => {
+    return {
+      ready: orders.filter((order) => order.status === "Reçue").length,
+      inDelivery: orders.filter((order) => order.status === "En livraison").length,
+      delivered: orders.filter((order) => order.status === "Livrée").length,
+      returns: orders.filter((order) => order.status === "Retour").length,
+    };
+  }, [orders]);
+
+  const filteredOrders = useMemo(() => {
+    const cleanSearch = searchText.toLowerCase().trim();
+
+    return deliveryOrders.filter((order) => {
+      const matchesFilter =
+        deliveryFilter === "Tous" ||
+        (deliveryFilter === "À suivre" &&
+          order.status !== "Livrée" &&
+          order.status !== "Retour") ||
+        order.status === deliveryFilter;
+
+      const searchableText = `${order.customerName || ""} ${
+        order.customerPhone || ""
+      } ${order.productName || ""} ${order.deliveryCompany || ""} ${
+        order.trackingCode || ""
+      }`.toLowerCase();
+
+      const matchesSearch =
+        cleanSearch.length === 0 || searchableText.includes(cleanSearch);
+
+      return matchesFilter && matchesSearch;
+    });
+  }, [deliveryOrders, searchText, deliveryFilter]);
+
+  return (
+    <section>
+      <h2 className="text-2xl font-bold text-slate-900">Livraison</h2>
+      <p className="text-slate-500 mt-1">Suivi des colis et statuts livraison</p>
+
+      <div className="grid grid-cols-2 gap-4 mt-6">
+        <StatCard label="Prêtes" value={deliveryStats.ready} />
+        <StatCard label="En livraison" value={deliveryStats.inDelivery} />
+        <StatCard label="Livrées" value={deliveryStats.delivered} />
+        <StatCard label="Retours" value={deliveryStats.returns} />
+      </div>
+
+      <div className="mt-5 bg-white rounded-3xl p-4 shadow-sm space-y-3">
+        <input
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          placeholder="Rechercher cliente, produit, société ou suivi"
+          className="w-full bg-slate-100 rounded-2xl p-4 outline-none"
+        />
+
+        <select
+          value={deliveryFilter}
+          onChange={(e) => setDeliveryFilter(e.target.value)}
+          className="w-full bg-slate-100 rounded-2xl p-4 outline-none"
+        >
+          <option>À suivre</option>
+          <option>Tous</option>
+          {DELIVERY_STATUS_OPTIONS.map((status) => (
+            <option key={status}>{status}</option>
+          ))}
+        </select>
+
+        <p className="text-sm text-slate-500">
+          {filteredOrders.length} commande(s) affichée(s)
+        </p>
+      </div>
+
+      {deliveryOrders.length === 0 ? (
+        <div className="bg-white rounded-3xl p-6 shadow-sm text-center mt-6">
+          <p className="text-slate-500">Aucune livraison à suivre pour le moment.</p>
+        </div>
+      ) : filteredOrders.length === 0 ? (
+        <div className="bg-white rounded-3xl p-6 shadow-sm text-center mt-6">
+          <p className="text-slate-500">Aucune livraison ne correspond au filtre.</p>
+        </div>
+      ) : (
+        <div className="mt-6 space-y-3">
+          {filteredOrders.map((order) => (
+            <DeliveryCard
+              key={order.id}
+              order={order}
+              onUpdateDelivery={onUpdateDelivery}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function DeliveryCard({ order, onUpdateDelivery }) {
+  const [deliveryForm, setDeliveryForm] = useState({
+    status: order.status || "Confirmée",
+    deliveryCompany: order.deliveryCompany || "",
+    trackingCode: order.trackingCode || "",
+  });
+
+  useEffect(() => {
+    setDeliveryForm({
+      status: order.status || "Confirmée",
+      deliveryCompany: order.deliveryCompany || "",
+      trackingCode: order.trackingCode || "",
+    });
+  }, [order.status, order.deliveryCompany, order.trackingCode]);
+
+  const whatsappNumber = getWhatsAppNumber(order.customerPhone);
+  const deliveryText = encodeURIComponent(
+    `Bonjour ${order.customerName}, votre commande ${order.productName} est ${deliveryForm.status.toLowerCase()}. ${deliveryForm.deliveryCompany ? `Livraison : ${deliveryForm.deliveryCompany}.` : ""} ${deliveryForm.trackingCode ? `Code suivi : ${deliveryForm.trackingCode}.` : ""} Merci.`
+  );
+
+  const updateField = (name, value) => {
+    setDeliveryForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  };
+
+  const saveDelivery = async () => {
+    await onUpdateDelivery(order, deliveryForm);
+  };
+
+  const quickStatus = async (status) => {
+    const nextForm = {
+      ...deliveryForm,
+      status,
+    };
+
+    setDeliveryForm(nextForm);
+    await onUpdateDelivery(order, nextForm);
+  };
+
+  return (
+    <div className="bg-white rounded-3xl p-4 shadow-sm">
+      <div className="flex justify-between gap-3">
+        <div>
+          <h3 className="font-bold text-slate-900">{order.customerName}</h3>
+          <p className="text-slate-500 text-sm">{order.productName}</p>
+        </div>
+
+        <span className="bg-slate-100 text-slate-700 rounded-full px-3 py-2 text-xs font-semibold h-fit">
+          {order.status}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 mt-4 text-sm">
+        <div className="bg-slate-100 rounded-2xl p-3">
+          <p className="text-slate-500">Total</p>
+          <p className="font-bold">{formatAmount(order.sellingPrice)} DA</p>
+        </div>
+
+        <div className="bg-slate-100 rounded-2xl p-3">
+          <p className="text-slate-500">Reste</p>
+          <p className="font-bold">{formatAmount(order.remaining)} DA</p>
+        </div>
+      </div>
+
+      <div className="mt-4 space-y-2">
+        <select
+          value={deliveryForm.status}
+          onChange={(e) => updateField("status", e.target.value)}
+          className="w-full bg-slate-100 rounded-2xl p-4 outline-none"
+        >
+          {DELIVERY_STATUS_OPTIONS.map((status) => (
+            <option key={status}>{status}</option>
+          ))}
+        </select>
+
+        <input
+          value={deliveryForm.deliveryCompany}
+          onChange={(e) => updateField("deliveryCompany", e.target.value)}
+          placeholder="Société de livraison"
+          className="w-full bg-slate-100 rounded-2xl p-4 outline-none"
+        />
+
+        <input
+          value={deliveryForm.trackingCode}
+          onChange={(e) => updateField("trackingCode", e.target.value)}
+          placeholder="Code suivi / tracking"
+          className="w-full bg-slate-100 rounded-2xl p-4 outline-none"
+        />
+
+        <button
+          type="button"
+          onClick={saveDelivery}
+          className="w-full bg-slate-900 text-white rounded-2xl p-3 text-sm font-semibold"
+        >
+          Enregistrer suivi
+        </button>
+
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            type="button"
+            onClick={() => quickStatus("En livraison")}
+            className="bg-orange-50 text-orange-700 rounded-2xl p-3 text-xs font-semibold"
+          >
+            En livraison
+          </button>
+
+          <button
+            type="button"
+            onClick={() => quickStatus("Livrée")}
+            className="bg-green-50 text-green-700 rounded-2xl p-3 text-xs font-semibold"
+          >
+            Livrée
+          </button>
+
+          <button
+            type="button"
+            onClick={() => quickStatus("Retour")}
+            className="bg-red-50 text-red-600 rounded-2xl p-3 text-xs font-semibold"
+          >
+            Retour
+          </button>
+        </div>
+
+        {whatsappNumber && (
+          <a
+            href={`https://wa.me/${whatsappNumber}?text=${deliveryText}`}
+            target="_blank"
+            rel="noreferrer"
+            className="block w-full bg-green-50 text-green-700 rounded-2xl p-3 text-sm font-semibold text-center"
+          >
+            Informer la cliente sur WhatsApp
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Clients({ clients }) {
   const [searchText, setSearchText] = useState("");
 
@@ -1287,6 +1584,22 @@ function OrderFields({ form, onChange }) {
         ))}
       </select>
 
+      <input
+        name="deliveryCompany"
+        value={form.deliveryCompany}
+        onChange={onChange}
+        placeholder="Société de livraison"
+        className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm"
+      />
+
+      <input
+        name="trackingCode"
+        value={form.trackingCode}
+        onChange={onChange}
+        placeholder="Code suivi / tracking"
+        className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm"
+      />
+
       <textarea
         name="note"
         value={form.note}
@@ -1302,7 +1615,7 @@ function NavButton({ active, onClick, label }) {
   return (
     <button
       onClick={onClick}
-      className={`py-4 text-[11px] font-semibold ${
+      className={`py-4 text-[10px] font-semibold ${
         active ? "text-slate-900" : "text-slate-400"
       }`}
     >
