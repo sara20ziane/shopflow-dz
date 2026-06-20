@@ -18,6 +18,29 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "./firebase";
 
+const STATUS_OPTIONS = [
+  "Nouvelle",
+  "En attente paiement",
+  "Confirmée",
+  "Commandée fournisseur",
+  "Reçue",
+  "En livraison",
+  "Livrée",
+  "Annulée",
+  "Retour",
+];
+
+const INITIAL_ORDER_FORM = {
+  customerName: "",
+  customerPhone: "",
+  productName: "",
+  sellingPrice: "",
+  purchasePrice: "",
+  deposit: "",
+  status: "Nouvelle",
+  note: "",
+};
+
 function App() {
   const [mode, setMode] = useState("login");
   const [user, setUser] = useState(null);
@@ -31,16 +54,7 @@ function App() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [orderForm, setOrderForm] = useState({
-    customerName: "",
-    customerPhone: "",
-    productName: "",
-    sellingPrice: "",
-    purchasePrice: "",
-    deposit: "",
-    status: "Nouvelle",
-    note: "",
-  });
+  const [orderForm, setOrderForm] = useState(INITIAL_ORDER_FORM);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -77,17 +91,21 @@ function App() {
   }, [user]);
 
   const stats = useMemo(() => {
-    const totalSales = orders.reduce(
+    const activeOrders = orders.filter(
+      (order) => order.status !== "Annulée" && order.status !== "Retour"
+    );
+
+    const totalSales = activeOrders.reduce(
       (sum, order) => sum + Number(order.sellingPrice || 0),
       0
     );
 
-    const totalPurchases = orders.reduce(
+    const totalPurchases = activeOrders.reduce(
       (sum, order) => sum + Number(order.purchasePrice || 0),
       0
     );
 
-    const totalDeposits = orders.reduce(
+    const totalDeposits = activeOrders.reduce(
       (sum, order) => sum + Number(order.deposit || 0),
       0
     );
@@ -97,6 +115,12 @@ function App() {
 
     return {
       totalOrders: orders.length,
+      activeOrders: activeOrders.length,
+      deliveredOrders: orders.filter((order) => order.status === "Livrée").length,
+      inDeliveryOrders: orders.filter((order) => order.status === "En livraison").length,
+      canceledOrders: orders.filter(
+        (order) => order.status === "Annulée" || order.status === "Retour"
+      ).length,
       totalSales,
       totalDeposits,
       remaining,
@@ -219,23 +243,14 @@ function App() {
         status: orderForm.status,
         note: orderForm.note.trim(),
         createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
 
-      setOrderForm({
-        customerName: "",
-        customerPhone: "",
-        productName: "",
-        sellingPrice: "",
-        purchasePrice: "",
-        deposit: "",
-        status: "Nouvelle",
-        note: "",
-      });
-
+      setOrderForm(INITIAL_ORDER_FORM);
       setMessage("Commande ajoutée avec succès.");
       setPage("orders");
     } catch (error) {
-      setMessage("Erreur lors de l’ajout de la commande.");
+      setMessage("Erreur lors de l'ajout de la commande.");
     } finally {
       setLoading(false);
     }
@@ -247,11 +262,59 @@ function App() {
     try {
       await updateDoc(doc(db, "orders", orderId), {
         status: newStatus,
+        updatedAt: serverTimestamp(),
       });
 
       setMessage("Statut mis à jour.");
     } catch (error) {
       setMessage("Erreur lors de la mise à jour du statut.");
+    }
+  };
+
+  const handleUpdateOrder = async (orderId, formData) => {
+    resetMessage();
+
+    if (!formData.customerName.trim()) {
+      setMessage("Ajoute le nom de la cliente.");
+      return false;
+    }
+
+    if (!formData.productName.trim()) {
+      setMessage("Ajoute le nom du produit.");
+      return false;
+    }
+
+    if (!formData.sellingPrice) {
+      setMessage("Ajoute le prix de vente.");
+      return false;
+    }
+
+    try {
+      const sellingPrice = Number(formData.sellingPrice || 0);
+      const purchasePrice = Number(formData.purchasePrice || 0);
+      const deposit = Number(formData.deposit || 0);
+      const remaining = sellingPrice - deposit;
+      const profit = sellingPrice - purchasePrice;
+
+      await updateDoc(doc(db, "orders", orderId), {
+        customerName: formData.customerName.trim(),
+        customerPhone: formData.customerPhone.trim(),
+        productName: formData.productName.trim(),
+        sellingPrice,
+        purchasePrice,
+        deposit,
+        remaining,
+        profit,
+        status: formData.status,
+        note: formData.note.trim(),
+        updatedAt: serverTimestamp(),
+      });
+
+      setMessage("Commande modifiée.");
+      return true;
+    } catch (error) {
+      setMessage("Erreur lors de la modification de la commande.");
+      return false;
     }
   };
 
@@ -407,6 +470,7 @@ function App() {
           <Orders
             orders={orders}
             onStatusChange={handleUpdateStatus}
+            onUpdateOrder={handleUpdateOrder}
             onDeleteOrder={handleDeleteOrder}
           />
         )}
@@ -462,14 +526,23 @@ function Dashboard({ stats }) {
 
       <div className="grid grid-cols-2 gap-4 mt-6">
         <StatCard label="Commandes" value={stats.totalOrders} />
-        <StatCard label="CA total" value={`${stats.totalSales} DA`} />
-        <StatCard label="Acomptes" value={`${stats.totalDeposits} DA`} />
-        <StatCard label="Reste" value={`${stats.remaining} DA`} />
+        <StatCard label="Actives" value={stats.activeOrders} />
+        <StatCard label="En livraison" value={stats.inDeliveryOrders} />
+        <StatCard label="Livrées" value={stats.deliveredOrders} />
+        <StatCard label="CA total" value={`${formatAmount(stats.totalSales)} DA`} />
+        <StatCard label="Acomptes" value={`${formatAmount(stats.totalDeposits)} DA`} />
+        <StatCard label="Reste" value={`${formatAmount(stats.remaining)} DA`} />
+        <StatCard label="Annulées/retours" value={stats.canceledOrders} />
       </div>
 
       <div className="mt-4 bg-slate-900 text-white rounded-3xl p-5">
         <p className="text-sm text-slate-300">Bénéfice estimé</p>
-        <p className="text-3xl font-bold mt-1">{stats.profit} DA</p>
+        <p className="text-3xl font-bold mt-1">
+          {formatAmount(stats.profit)} DA
+        </p>
+        <p className="text-xs text-slate-400 mt-2">
+          Les commandes annulées et les retours ne sont pas comptés dans le CA.
+        </p>
       </div>
     </section>
   );
@@ -493,81 +566,7 @@ function AddOrder({ orderForm, onChange, onSubmit, loading }) {
       <p className="text-slate-500 mt-1">Ajoute une commande cliente</p>
 
       <form onSubmit={onSubmit} className="mt-6 space-y-3">
-        <input
-          name="customerName"
-          value={orderForm.customerName}
-          onChange={onChange}
-          placeholder="Nom de la cliente"
-          className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm"
-        />
-
-        <input
-          name="customerPhone"
-          value={orderForm.customerPhone}
-          onChange={onChange}
-          placeholder="Téléphone"
-          className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm"
-        />
-
-        <input
-          name="productName"
-          value={orderForm.productName}
-          onChange={onChange}
-          placeholder="Produit"
-          className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm"
-        />
-
-        <input
-          name="sellingPrice"
-          value={orderForm.sellingPrice}
-          onChange={onChange}
-          placeholder="Prix de vente"
-          type="number"
-          className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm"
-        />
-
-        <input
-          name="purchasePrice"
-          value={orderForm.purchasePrice}
-          onChange={onChange}
-          placeholder="Prix d’achat"
-          type="number"
-          className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm"
-        />
-
-        <input
-          name="deposit"
-          value={orderForm.deposit}
-          onChange={onChange}
-          placeholder="Acompte payé"
-          type="number"
-          className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm"
-        />
-
-        <select
-          name="status"
-          value={orderForm.status}
-          onChange={onChange}
-          className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm"
-        >
-          <option>Nouvelle</option>
-          <option>En attente paiement</option>
-          <option>Confirmée</option>
-          <option>Commandée fournisseur</option>
-          <option>Reçue</option>
-          <option>En livraison</option>
-          <option>Livrée</option>
-          <option>Annulée</option>
-          <option>Retour</option>
-        </select>
-
-        <textarea
-          name="note"
-          value={orderForm.note}
-          onChange={onChange}
-          placeholder="Remarque"
-          className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm min-h-24"
-        />
+        <OrderFields form={orderForm} onChange={onChange} />
 
         <button
           type="submit"
@@ -581,86 +580,298 @@ function AddOrder({ orderForm, onChange, onSubmit, loading }) {
   );
 }
 
-function Orders({ orders, onStatusChange, onDeleteOrder }) {
+function Orders({ orders, onStatusChange, onUpdateOrder, onDeleteOrder }) {
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("Tous");
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState(INITIAL_ORDER_FORM);
+
+  const filteredOrders = useMemo(() => {
+    const cleanSearch = searchText.toLowerCase().trim();
+
+    return orders.filter((order) => {
+      const matchesStatus =
+        statusFilter === "Tous" || order.status === statusFilter;
+
+      const searchableText = `${order.customerName || ""} ${
+        order.customerPhone || ""
+      } ${order.productName || ""}`.toLowerCase();
+
+      const matchesSearch =
+        cleanSearch.length === 0 || searchableText.includes(cleanSearch);
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [orders, searchText, statusFilter]);
+
+  const startEditing = (order) => {
+    setEditingId(order.id);
+    setEditForm({
+      customerName: order.customerName || "",
+      customerPhone: order.customerPhone || "",
+      productName: order.productName || "",
+      sellingPrice: String(order.sellingPrice || ""),
+      purchasePrice: String(order.purchasePrice || ""),
+      deposit: String(order.deposit || ""),
+      status: order.status || "Nouvelle",
+      note: order.note || "",
+    });
+  };
+
+  const stopEditing = () => {
+    setEditingId(null);
+    setEditForm(INITIAL_ORDER_FORM);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+
+    setEditForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    const success = await onUpdateOrder(editingId, editForm);
+
+    if (success) {
+      stopEditing();
+    }
+  };
+
   return (
     <section>
       <h2 className="text-2xl font-bold text-slate-900">Commandes</h2>
       <p className="text-slate-500 mt-1">Liste de tes commandes</p>
 
+      <div className="mt-5 bg-white rounded-3xl p-4 shadow-sm space-y-3">
+        <input
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          placeholder="Rechercher cliente, téléphone ou produit"
+          className="w-full bg-slate-100 rounded-2xl p-4 outline-none"
+        />
+
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="w-full bg-slate-100 rounded-2xl p-4 outline-none"
+        >
+          <option>Tous</option>
+          {STATUS_OPTIONS.map((status) => (
+            <option key={status}>{status}</option>
+          ))}
+        </select>
+
+        <p className="text-sm text-slate-500">
+          {filteredOrders.length} commande(s) affichée(s)
+        </p>
+      </div>
+
       {orders.length === 0 ? (
         <div className="bg-white rounded-3xl p-6 shadow-sm text-center mt-6">
           <p className="text-slate-500">Aucune commande pour le moment.</p>
         </div>
+      ) : filteredOrders.length === 0 ? (
+        <div className="bg-white rounded-3xl p-6 shadow-sm text-center mt-6">
+          <p className="text-slate-500">Aucune commande ne correspond au filtre.</p>
+        </div>
       ) : (
         <div className="mt-6 space-y-3">
-          {orders.map((order) => (
+          {filteredOrders.map((order) => (
             <div key={order.id} className="bg-white rounded-3xl p-4 shadow-sm">
-              <div className="flex justify-between gap-3">
-                <div>
-                  <h3 className="font-bold text-slate-900">
-                    {order.customerName}
-                  </h3>
-                  <p className="text-slate-500 text-sm">{order.productName}</p>
-                </div>
+              {editingId === order.id ? (
+                <form onSubmit={handleEditSubmit} className="space-y-3">
+                  <h3 className="font-bold text-slate-900">Modifier la commande</h3>
+                  <OrderFields form={editForm} onChange={handleEditChange} />
 
-                <select
-                  value={order.status}
-                  onChange={(e) => onStatusChange(order.id, e.target.value)}
-                  className="bg-slate-100 text-slate-700 rounded-full px-3 py-2 text-xs font-semibold h-fit outline-none max-w-36"
-                >
-                  <option>Nouvelle</option>
-                  <option>En attente paiement</option>
-                  <option>Confirmée</option>
-                  <option>Commandée fournisseur</option>
-                  <option>Reçue</option>
-                  <option>En livraison</option>
-                  <option>Livrée</option>
-                  <option>Annulée</option>
-                  <option>Retour</option>
-                </select>
-              </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={stopEditing}
+                      className="bg-slate-100 text-slate-700 rounded-2xl p-3 text-sm font-semibold"
+                    >
+                      Annuler
+                    </button>
 
-              <div className="grid grid-cols-3 gap-2 mt-4 text-sm">
-                <div className="bg-slate-100 rounded-2xl p-3">
-                  <p className="text-slate-500">Prix</p>
-                  <p className="font-bold">{order.sellingPrice} DA</p>
-                </div>
-
-                <div className="bg-slate-100 rounded-2xl p-3">
-                  <p className="text-slate-500">Acompte</p>
-                  <p className="font-bold">{order.deposit} DA</p>
-                </div>
-
-                <div className="bg-slate-100 rounded-2xl p-3">
-                  <p className="text-slate-500">Reste</p>
-                  <p className="font-bold">{order.remaining} DA</p>
-                </div>
-              </div>
-
-              {order.customerPhone && (
-                <p className="mt-3 text-sm text-slate-500">
-                  Tél : {order.customerPhone}
-                </p>
+                    <button
+                      type="submit"
+                      className="bg-slate-900 text-white rounded-2xl p-3 text-sm font-semibold"
+                    >
+                      Enregistrer
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <OrderCard
+                  order={order}
+                  onStatusChange={onStatusChange}
+                  onEdit={startEditing}
+                  onDeleteOrder={onDeleteOrder}
+                />
               )}
-
-              {order.note && (
-                <p className="mt-2 text-sm text-slate-500">
-                  Note : {order.note}
-                </p>
-              )}
-
-              <button
-                type="button"
-                onClick={() => onDeleteOrder(order.id)}
-                className="mt-4 w-full bg-red-50 text-red-600 rounded-2xl p-3 text-sm font-semibold"
-              >
-                Supprimer la commande
-              </button>
             </div>
           ))}
         </div>
       )}
     </section>
+  );
+}
+
+function OrderCard({ order, onStatusChange, onEdit, onDeleteOrder }) {
+  return (
+    <>
+      <div className="flex justify-between gap-3">
+        <div>
+          <h3 className="font-bold text-slate-900">{order.customerName}</h3>
+          <p className="text-slate-500 text-sm">{order.productName}</p>
+        </div>
+
+        <select
+          value={order.status}
+          onChange={(e) => onStatusChange(order.id, e.target.value)}
+          className="bg-slate-100 text-slate-700 rounded-full px-3 py-2 text-xs font-semibold h-fit outline-none max-w-36"
+        >
+          {STATUS_OPTIONS.map((status) => (
+            <option key={status}>{status}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 mt-4 text-sm">
+        <div className="bg-slate-100 rounded-2xl p-3">
+          <p className="text-slate-500">Prix</p>
+          <p className="font-bold">{formatAmount(order.sellingPrice)} DA</p>
+        </div>
+
+        <div className="bg-slate-100 rounded-2xl p-3">
+          <p className="text-slate-500">Acompte</p>
+          <p className="font-bold">{formatAmount(order.deposit)} DA</p>
+        </div>
+
+        <div className="bg-slate-100 rounded-2xl p-3">
+          <p className="text-slate-500">Reste</p>
+          <p className="font-bold">{formatAmount(order.remaining)} DA</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+        <div className="bg-slate-100 rounded-2xl p-3">
+          <p className="text-slate-500">Achat</p>
+          <p className="font-bold">{formatAmount(order.purchasePrice)} DA</p>
+        </div>
+
+        <div className="bg-slate-100 rounded-2xl p-3">
+          <p className="text-slate-500">Bénéfice</p>
+          <p className="font-bold">{formatAmount(order.profit)} DA</p>
+        </div>
+      </div>
+
+      {order.customerPhone && (
+        <p className="mt-3 text-sm text-slate-500">Tél : {order.customerPhone}</p>
+      )}
+
+      {order.note && (
+        <p className="mt-2 text-sm text-slate-500">Note : {order.note}</p>
+      )}
+
+      <div className="grid grid-cols-2 gap-2 mt-4">
+        <button
+          type="button"
+          onClick={() => onEdit(order)}
+          className="w-full bg-slate-100 text-slate-700 rounded-2xl p-3 text-sm font-semibold"
+        >
+          Modifier
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onDeleteOrder(order.id)}
+          className="w-full bg-red-50 text-red-600 rounded-2xl p-3 text-sm font-semibold"
+        >
+          Supprimer
+        </button>
+      </div>
+    </>
+  );
+}
+
+function OrderFields({ form, onChange }) {
+  return (
+    <>
+      <input
+        name="customerName"
+        value={form.customerName}
+        onChange={onChange}
+        placeholder="Nom de la cliente"
+        className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm"
+      />
+
+      <input
+        name="customerPhone"
+        value={form.customerPhone}
+        onChange={onChange}
+        placeholder="Téléphone"
+        type="tel"
+        className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm"
+      />
+
+      <input
+        name="productName"
+        value={form.productName}
+        onChange={onChange}
+        placeholder="Produit"
+        className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm"
+      />
+
+      <input
+        name="sellingPrice"
+        value={form.sellingPrice}
+        onChange={onChange}
+        placeholder="Prix de vente"
+        type="number"
+        className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm"
+      />
+
+      <input
+        name="purchasePrice"
+        value={form.purchasePrice}
+        onChange={onChange}
+        placeholder="Prix d'achat"
+        type="number"
+        className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm"
+      />
+
+      <input
+        name="deposit"
+        value={form.deposit}
+        onChange={onChange}
+        placeholder="Acompte payé"
+        type="number"
+        className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm"
+      />
+
+      <select
+        name="status"
+        value={form.status}
+        onChange={onChange}
+        className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm"
+      >
+        {STATUS_OPTIONS.map((status) => (
+          <option key={status}>{status}</option>
+        ))}
+      </select>
+
+      <textarea
+        name="note"
+        value={form.note}
+        onChange={onChange}
+        placeholder="Remarque"
+        className="w-full bg-white rounded-2xl p-4 outline-none shadow-sm min-h-24"
+      />
+    </>
   );
 }
 
@@ -675,6 +886,10 @@ function NavButton({ active, onClick, label }) {
       {label}
     </button>
   );
+}
+
+function formatAmount(value) {
+  return Number(value || 0).toLocaleString("fr-FR");
 }
 
 export default App;
