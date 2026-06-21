@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ShopFlow DZ - Tarifs beta</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Arial, sans-serif; background: #07132d; color: #e5f7ff; }
+      a { color: inherit; }
+      .page { min-height: 100vh; padding: 22px; background: radial-gradient(circle at top left, rgba(0,229,255,.22), transparent 34%), radial-gradient(circle at bottom right, rgba(0,196,164,.18), transparent 32%), #07132d; }
+      .shell { max-width: 980px; margin: 0 auto; }
+      .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+      .brand { display: flex; align-items: center; gap: 12px; font-weight: 900; }
+      .brand img { width: 48px; height: 48px; border-radius: 16px; }
+      .back { text-decoration: none; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16); padding: 11px 14px; border-radius: 999px; font-weight: 800; }
+      .hero { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: 34px; padding: 30px; box-shadow: 0 22px 60px rgba(0,0,0,.22); }
+      .badge { display: inline-block; background: rgba(0,229,255,.14); color: #67e8f9; border: 1px solid rgba(103,232,249,.35); padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 900; margin-bottom: 14px; }
+      h1 { margin: 0; font-size: clamp(34px, 6vw, 58px); line-height: 1.02; letter-spacing: -1.4px; }
+      h2 { margin: 0 0 10px; font-size: 26px; }
+      p { color: #b9d7e4; line-height: 1.7; }
+      .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 18px; }
+      .card { background: rgba(255,255,255,.92); color: #0f172a; border-radius: 28px; padding: 22px; }
+      .card.featured { background: linear-gradient(135deg, #00e5ff, #00c4a4); color: #07132d; transform: scale(1.02); }
+      .price { font-size: 34px; font-weight: 900; margin: 12px 0 4px; }
+      .muted { color: #64748b; }
+      .featured .muted { color: rgba(7,19,45,.75); }
+      ul { padding-left: 18px; line-height: 1.9; }
+      .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+      .button { text-align: center; text-decoration: none; border-radius: 18px; padding: 14px; font-weight: 900; border: 1px solid rgba(255,255,255,.18); }
+      .primary { background: #ffffff; color: #07132d; }
+      .secondary { background: rgba(255,255,255,.1); color: #ffffff; }
+      .note { margin-top: 18px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: 24px; padding: 18px; }
+      @media (max-width: 820px) { .top { align-items: flex-start; flex-direction: column; } .cards, .actions { grid-template-columns: 1fr; } .card.featured { transform: none; } .hero { padding: 22px; border-radius: 26px; } }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <div class="shell">
+        <div class="top">
+          <div class="brand"><img src="/icon.svg" alt="ShopFlow DZ" /><span>ShopFlow DZ</span></div>
+          <a class="back" href="/beta.html">Retour centre beta</a>
+        </div>
+
+        <section class="hero">
+          <span class="badge">Tarifs indicatifs - Beta</span>
+          <h1>Des prix simples pour les vendeuses en ligne.</h1>
+          <p>Pendant la beta, ShopFlow DZ reste en test. Ces tarifs servent à préparer le lancement officiel et à comprendre ce qui convient aux vendeuses Instagram, WhatsApp et Facebook.</p>
+          <div class="cards">
+            <article class="card">
+              <h2>Beta</h2>
+              <p class="muted">Pour tester l'application.</p>
+              <div class="price">Gratuit</div>
+              <p class="muted">Pendant la période beta.</p>
+              <ul>
+                <li>Commandes</li>
+                <li>Paiements</li>
+                <li>Livraisons</li>
+                <li>Fiches clientes</li>
+              </ul>
+            </article>
+            <article class="card featured">
+              <h2>Starter</h2>
+              <p class="muted">Pour petites boutiques.</p>
+              <div class="price">À définir</div>
+              <p class="muted">Après les retours beta.</p>
+              <ul>
+                <li>Tout le suivi essentiel</li>
+                <li>Interface mobile</li>
+                <li>Support Instagram</li>
+                <li>Améliorations régulières</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h2>Pro</h2>
+              <p class="muted">Pour vendeuses actives.</p>
+              <div class="price">À définir</div>
+              <p class="muted">Selon les besoins réels.</p>
+              <ul>
+                <li>Statistiques avancées</li>
+                <li>Exports</li>
+                <li>Plus d'automatisations</li>
+                <li>Priorité support</li>
+              </ul>
+            </article>
+          </div>
+          <div class="note">
+            <strong>Important :</strong>
+            <p>Les premières testeuses aident à construire la bonne version. Le prix final sera décidé après leurs retours, pas avant.</p>
+          </div>
+          <div class="actions">
+            <a class="button primary" href="https://forms.gle/GRQdaEV5hJwQpPhy6" target="_blank" rel="noopener">Rejoindre la beta</a>
+            <a class="button secondary" href="https://www.instagram.com/shopflowdz/" target="_blank" rel="noopener">Contacter sur Instagram</a>
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>
