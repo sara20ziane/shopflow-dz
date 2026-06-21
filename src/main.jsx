@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
-import App from "./AppCorrected.jsx";
+import App from "./AppUxClean.jsx";
 import { setupPwaMetadata } from "./pwa.js";
 
 setupPwaMetadata();
