@@ -1,4 +1,4 @@
-const CACHE_NAME = "shopflow-dz-v1";
+const CACHE_NAME = "shopflow-dz-v2";
 const APP_SHELL = ["/", "/manifest.webmanifest", "/icon.svg"];
 
 self.addEventListener("install", (event) => {
@@ -21,6 +21,8 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request).then((cached) => cached || caches.match("/")))
+    fetch(event.request).catch(() =>
+      caches.match(event.request).then((cached) => cached || caches.match("/"))
+    )
   );
 });
