@@ -1,5 +1,7 @@
 import { useEffect } from "react";
+import { signOut } from "firebase/auth";
 import AppCorrected from "./AppCorrected.jsx";
+import { auth } from "./firebase";
 
 const RESET_FR = {
   title: "Mot de passe oublié ?",
@@ -57,9 +59,33 @@ function patchResetButton() {
   });
 }
 
+function ensureLogoutButton() {
+  const header = document.querySelector("header");
+  const loginScreen = document.querySelector('form input[type="password"]') && !header;
+  const existing = document.querySelector("#shopflow-visible-logout");
+
+  if (!header || loginScreen) {
+    existing?.remove();
+    return;
+  }
+
+  if (existing) return;
+
+  const button = document.createElement("button");
+  button.id = "shopflow-visible-logout";
+  button.type = "button";
+  button.textContent = document.documentElement.dir === "rtl" ? "خروج" : "Déconnexion";
+  button.addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.reload();
+  });
+  document.body.appendChild(button);
+}
+
 function applyUxCleanups() {
   cleanHeaderBranding();
   patchResetButton();
+  ensureLogoutButton();
 }
 
 export default function AppUxClean() {
@@ -80,6 +106,30 @@ export default function AppUxClean() {
       header .min-w-0 p:first-child {
         font-size: 1.15rem !important;
         line-height: 1.25rem !important;
+      }
+
+      header button:has(+ #shopflow-visible-logout) {
+        display: none !important;
+      }
+
+      #shopflow-visible-logout {
+        position: fixed !important;
+        right: 1rem !important;
+        bottom: 6rem !important;
+        z-index: 9999 !important;
+        border: none !important;
+        border-radius: 999px !important;
+        background: #fee2e2 !important;
+        color: #dc2626 !important;
+        padding: 0.8rem 1rem !important;
+        font-size: 0.82rem !important;
+        font-weight: 900 !important;
+        box-shadow: 0 14px 35px rgba(15, 23, 42, 0.22) !important;
+      }
+
+      html[dir="rtl"] #shopflow-visible-logout {
+        right: auto !important;
+        left: 1rem !important;
       }
 
       button[data-shopflow-reset="true"] {
@@ -145,6 +195,7 @@ export default function AppUxClean() {
 
     return () => {
       observer.disconnect();
+      document.querySelector("#shopflow-visible-logout")?.remove();
       style.remove();
     };
   }, []);
