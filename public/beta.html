@@ -3,43 +3,422 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ShopFlow DZ - Beta</title>
+    <title>ShopFlow DZ - Centre beta</title>
     <style>
       * { box-sizing: border-box; }
-      body { margin: 0; font-family: Arial, sans-serif; background: #f1f5f9; color: #0f172a; }
-      .page { min-height: 100vh; padding: 24px; display: flex; align-items: center; justify-content: center; }
-      .card { width: 100%; max-width: 520px; background: white; border-radius: 28px; padding: 28px; box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08); }
-      .logo { width: 76px; height: 76px; border-radius: 24px; background: #0f172a; color: white; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; margin-bottom: 18px; }
-      h1 { margin: 0; font-size: 32px; line-height: 1.1; }
-      p { color: #475569; line-height: 1.6; }
-      .badge { display: inline-block; background: #e0f2fe; color: #0369a1; padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; margin-bottom: 16px; }
-      .features { display: grid; gap: 10px; margin: 22px 0; }
-      .feature { background: #f8fafc; border-radius: 18px; padding: 14px; font-weight: 700; }
-      .cta { display: block; text-align: center; background: #0f172a; color: white; text-decoration: none; padding: 16px; border-radius: 18px; font-weight: 800; margin-top: 18px; }
-      .secondary { display: block; text-align: center; color: #0f172a; text-decoration: none; padding: 14px; font-weight: 700; }
-      small { color: #94a3b8; display: block; text-align: center; margin-top: 14px; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f1f5f9;
+        color: #0f172a;
+      }
+      a { color: inherit; }
+      .page {
+        min-height: 100vh;
+        padding: 18px;
+      }
+      .shell {
+        width: 100%;
+        max-width: 980px;
+        margin: 0 auto;
+      }
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(241, 245, 249, 0.92);
+        backdrop-filter: blur(14px);
+        padding: 14px 0;
+      }
+      .topbar-inner {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 22px;
+        padding: 10px 12px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 900;
+      }
+      .mini-logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        background: #0f172a;
+        color: white;
+        display: grid;
+        place-items: center;
+        font-weight: 900;
+      }
+      .nav {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 2px;
+      }
+      .nav a {
+        white-space: nowrap;
+        text-decoration: none;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 10px 12px;
+        border-radius: 999px;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 800;
+      }
+      .hero {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 18px;
+        align-items: stretch;
+        margin-top: 14px;
+      }
+      .card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 30px;
+        padding: 26px;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.07);
+      }
+      .logo {
+        width: 76px;
+        height: 76px;
+        border-radius: 24px;
+        background: #0f172a;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        font-weight: 900;
+        margin-bottom: 18px;
+      }
+      .badge {
+        display: inline-block;
+        background: #e0f2fe;
+        color: #0369a1;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 800;
+        margin-bottom: 16px;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(32px, 6vw, 54px);
+        line-height: 1.02;
+        letter-spacing: -1.5px;
+      }
+      h2 {
+        margin: 0 0 12px;
+        font-size: 28px;
+        letter-spacing: -0.7px;
+      }
+      h3 {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+      p {
+        color: #475569;
+        line-height: 1.65;
+        margin: 10px 0;
+      }
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 22px;
+      }
+      .button {
+        display: block;
+        text-align: center;
+        text-decoration: none;
+        padding: 15px 14px;
+        border-radius: 18px;
+        font-weight: 900;
+        border: 1px solid #e2e8f0;
+      }
+      .primary {
+        background: #0f172a;
+        color: white;
+        border-color: #0f172a;
+      }
+      .secondary {
+        background: #f8fafc;
+        color: #0f172a;
+      }
+      .instagram {
+        background: #fdf2f8;
+        color: #be185d;
+        border-color: #fbcfe8;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin: 18px 0;
+      }
+      .feature, .link-card, .step, .faq-item {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 16px;
+      }
+      .feature strong, .link-card strong { display: block; margin-bottom: 6px; }
+      .link-card {
+        text-decoration: none;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+      .link-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+      }
+      .section {
+        margin-top: 18px;
+      }
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+      .step-number {
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        background: #0f172a;
+        color: white;
+        display: grid;
+        place-items: center;
+        font-weight: 900;
+        margin-bottom: 10px;
+      }
+      form {
+        display: grid;
+        gap: 10px;
+      }
+      label {
+        font-weight: 800;
+        font-size: 13px;
+        color: #334155;
+      }
+      input, textarea, select {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 16px;
+        padding: 13px 14px;
+        font: inherit;
+        color: #0f172a;
+        background: white;
+      }
+      textarea { min-height: 96px; resize: vertical; }
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .note {
+        font-size: 13px;
+        color: #64748b;
+      }
+      .generated {
+        display: none;
+        margin-top: 12px;
+        background: #ecfeff;
+        border: 1px solid #a5f3fc;
+        border-radius: 18px;
+        padding: 14px;
+      }
+      .generated.show { display: block; }
+      .footer {
+        text-align: center;
+        color: #94a3b8;
+        padding: 24px 0 10px;
+        font-size: 13px;
+      }
+      @media (max-width: 780px) {
+        .topbar-inner { align-items: flex-start; flex-direction: column; }
+        .hero { grid-template-columns: 1fr; }
+        .grid, .steps { grid-template-columns: 1fr; }
+        .actions, .form-row { grid-template-columns: 1fr; }
+        .card { padding: 20px; border-radius: 24px; }
+      }
     </style>
   </head>
   <body>
     <main class="page">
-      <section class="card">
-        <div class="logo">SF</div>
-        <span class="badge">Beta test - Algérie</span>
-        <h1>Gère tes commandes sans cahier ni Excel.</h1>
-        <p>
-          ShopFlow DZ aide les vendeuses Instagram, WhatsApp et Facebook à suivre leurs commandes,
-          acomptes, clientes, livraisons et bénéfices depuis le téléphone.
-        </p>
-        <div class="features">
-          <div class="feature">Commandes et statuts au même endroit</div>
-          <div class="feature">Acomptes et reste à encaisser</div>
-          <div class="feature">Suivi livraison et retours</div>
-          <div class="feature">Fiche cliente avec contact WhatsApp</div>
-        </div>
-        <a class="cta" href="/">Ouvrir ShopFlow DZ</a>
-        <a class="secondary" href="https://forms.gle/GRQdaEV5hJwQpPhy6">Rejoindre la beta</a>
-        <small>Version beta privée - ShopFlow DZ</small>
-      </section>
+      <div class="shell">
+        <header class="topbar">
+          <div class="topbar-inner">
+            <div class="brand">
+              <div class="mini-logo">SF</div>
+              <span>ShopFlow DZ Beta</span>
+            </div>
+            <nav class="nav" aria-label="Navigation beta">
+              <a href="#accueil">Accueil</a>
+              <a href="#liens">Liens</a>
+              <a href="#guide">Guide</a>
+              <a href="#faq">FAQ</a>
+              <a href="#contact">Contact</a>
+            </nav>
+          </div>
+        </header>
+
+        <section id="accueil" class="hero">
+          <div class="card">
+            <div class="logo">SF</div>
+            <span class="badge">Beta test - Algérie</span>
+            <h1>Gère tes commandes sans cahier ni Excel.</h1>
+            <p>
+              ShopFlow DZ aide les vendeuses Instagram, WhatsApp et Facebook à suivre leurs commandes,
+              acomptes, clientes, livraisons et bénéfices depuis le téléphone.
+            </p>
+            <div class="actions">
+              <a class="button primary" href="/">Ouvrir l'application</a>
+              <a class="button instagram" href="https://www.instagram.com/shopflowdz/" target="_blank" rel="noopener">Instagram @shopflowdz</a>
+            </div>
+          </div>
+
+          <aside class="card">
+            <h2>Ce que tu peux faire</h2>
+            <div class="feature"><strong>Commandes</strong><span>Suivre les statuts au même endroit.</span></div>
+            <div class="feature"><strong>Paiements</strong><span>Voir les acomptes et le reste à encaisser.</span></div>
+            <div class="feature"><strong>Livraison</strong><span>Suivre colis, retours et sociétés de livraison.</span></div>
+            <div class="feature"><strong>Clientes</strong><span>Retrouver une cliente et la contacter vite.</span></div>
+          </aside>
+        </section>
+
+        <section id="liens" class="section card">
+          <h2>Tout au même endroit</h2>
+          <p>Utilise cette page comme le centre de la beta : application, guide, FAQ, confidentialité et contact.</p>
+          <div class="grid">
+            <a class="link-card" href="/"><strong>Application</strong><span>Accéder à ShopFlow DZ</span></a>
+            <a class="link-card" href="/guide.html"><strong>Guide</strong><span>Comment utiliser l'app</span></a>
+            <a class="link-card" href="/faq.html"><strong>FAQ</strong><span>Questions fréquentes</span></a>
+            <a class="link-card" href="/privacy.html"><strong>Confidentialité</strong><span>Données et sécurité</span></a>
+          </div>
+        </section>
+
+        <section id="guide" class="section card">
+          <h2>Démarrage rapide</h2>
+          <div class="steps">
+            <div class="step"><div class="step-number">1</div><h3>Créer un compte</h3><p>Ouvre l'application et crée ton compte avec ton email.</p></div>
+            <div class="step"><div class="step-number">2</div><h3>Ajouter une commande</h3><p>Ajoute cliente, produit, prix, acompte et statut.</p></div>
+            <div class="step"><div class="step-number">3</div><h3>Suivre la vente</h3><p>Consulte paiements, livraisons et fiche cliente.</p></div>
+          </div>
+          <div class="actions">
+            <a class="button secondary" href="/guide.html">Lire le guide complet</a>
+            <a class="button secondary" href="https://forms.gle/GRQdaEV5hJwQpPhy6" target="_blank" rel="noopener">Envoyer un retour beta</a>
+          </div>
+        </section>
+
+        <section id="faq" class="section card">
+          <h2>Questions rapides</h2>
+          <div class="faq-item"><strong>Est-ce gratuit pendant la beta ?</strong><p>Oui, la beta sert à tester l'application avec de vraies vendeuses.</p></div>
+          <div class="faq-item"><strong>Est-ce que mes clientes voient mes données ?</strong><p>Non. Les données sont dans ton compte, pas publiques.</p></div>
+          <div class="faq-item"><strong>Est-ce adapté au téléphone ?</strong><p>Oui, l'app est pensée mobile-first pour Instagram, WhatsApp et Facebook.</p></div>
+          <a class="button secondary" href="/faq.html">Voir toute la FAQ</a>
+        </section>
+
+        <section id="contact" class="section card">
+          <h2>Contact</h2>
+          <p>
+            Pour nous contacter, tu peux envoyer un message sur Instagram :
+            <strong>@shopflowdz</strong>.
+          </p>
+          <a class="button instagram" href="https://www.instagram.com/shopflowdz/" target="_blank" rel="noopener">Ouvrir Instagram</a>
+
+          <h3 style="margin-top: 22px;">Petit formulaire de contact</h3>
+          <p class="note">Remplis le formulaire, il prépare un message à copier puis à envoyer sur Instagram.</p>
+          <form id="contactForm">
+            <div class="form-row">
+              <div>
+                <label for="name">Nom</label>
+                <input id="name" name="name" placeholder="Ex : Sara" required />
+              </div>
+              <div>
+                <label for="shop">Boutique</label>
+                <input id="shop" name="shop" placeholder="Ex : Yuna's Shop" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div>
+                <label for="phone">Téléphone / WhatsApp</label>
+                <input id="phone" name="phone" placeholder="Ex : 0550..." />
+              </div>
+              <div>
+                <label for="subject">Sujet</label>
+                <select id="subject" name="subject">
+                  <option>Je veux tester ShopFlow DZ</option>
+                  <option>J'ai une question</option>
+                  <option>Je veux signaler un bug</option>
+                  <option>Je veux proposer une idée</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label for="message">Message</label>
+              <textarea id="message" name="message" placeholder="Écris ton message ici..." required></textarea>
+            </div>
+            <button class="button primary" type="submit">Préparer mon message</button>
+          </form>
+
+          <div id="generatedBox" class="generated">
+            <strong>Message prêt :</strong>
+            <textarea id="generatedMessage" readonly></textarea>
+            <div class="actions">
+              <button class="button secondary" id="copyMessage" type="button">Copier le message</button>
+              <a class="button instagram" href="https://www.instagram.com/shopflowdz/" target="_blank" rel="noopener">Envoyer sur Instagram</a>
+            </div>
+          </div>
+        </section>
+
+        <div class="footer">Version beta privée - ShopFlow DZ</div>
+      </div>
     </main>
+
+    <script>
+      const form = document.getElementById("contactForm");
+      const generatedBox = document.getElementById("generatedBox");
+      const generatedMessage = document.getElementById("generatedMessage");
+      const copyButton = document.getElementById("copyMessage");
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const data = new FormData(form);
+        const text = `Bonjour ShopFlow DZ,
+
+Nom : ${data.get("name") || "-"}
+Boutique : ${data.get("shop") || "-"}
+Téléphone / WhatsApp : ${data.get("phone") || "-"}
+Sujet : ${data.get("subject") || "-"}
+
+Message :
+${data.get("message") || "-"}`;
+
+        generatedMessage.value = text;
+        generatedBox.classList.add("show");
+        generatedBox.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+
+      copyButton.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(generatedMessage.value);
+          copyButton.textContent = "Message copié";
+        } catch (error) {
+          generatedMessage.select();
+          document.execCommand("copy");
+          copyButton.textContent = "Message copié";
+        }
+      });
+    </script>
   </body>
 </html>
