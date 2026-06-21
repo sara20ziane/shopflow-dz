@@ -14,9 +14,10 @@
       .topbar { position: sticky; top: 0; z-index: 10; background: rgba(241,245,249,.92); backdrop-filter: blur(14px); padding: 14px 0; }
       .topbar-inner { display: flex; gap: 10px; align-items: center; justify-content: space-between; background: white; border: 1px solid #e2e8f0; border-radius: 22px; padding: 10px 12px; box-shadow: 0 12px 30px rgba(15,23,42,.06); }
       .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; }
-      .mini-logo, .logo { background: #0f172a; color: white; display: grid; place-items: center; font-weight: 900; }
+      .mini-logo, .logo { background: #07132d; color: white; display: grid; place-items: center; font-weight: 900; overflow: hidden; }
       .mini-logo { width: 40px; height: 40px; border-radius: 14px; }
-      .logo { width: 76px; height: 76px; border-radius: 24px; font-size: 28px; margin-bottom: 18px; }
+      .logo { width: 84px; height: 84px; border-radius: 26px; margin-bottom: 18px; box-shadow: 0 18px 34px rgba(7,19,45,.22); }
+      .mini-logo img, .logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
       .nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
       .nav a { white-space: nowrap; text-decoration: none; background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 12px; border-radius: 999px; color: #334155; font-size: 13px; font-weight: 800; }
       .hero { display: grid; grid-template-columns: 1.15fr .85fr; gap: 18px; align-items: stretch; margin-top: 14px; }
@@ -28,17 +29,17 @@
       p { color: #475569; line-height: 1.65; margin: 10px 0; }
       .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
       .button { display: block; text-align: center; text-decoration: none; padding: 15px 14px; border-radius: 18px; font-weight: 900; border: 1px solid #e2e8f0; cursor: pointer; font: inherit; }
-      .primary { background: #0f172a; color: white; border-color: #0f172a; }
+      .primary { background: #07132d; color: white; border-color: #07132d; }
       .secondary { background: #f8fafc; color: #0f172a; }
       .instagram { background: #fdf2f8; color: #be185d; border-color: #fbcfe8; }
-      .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 18px 0; }
+      .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin: 18px 0; }
       .feature, .link-card, .step, .faq-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 16px; }
       .feature strong, .link-card strong { display: block; margin-bottom: 6px; }
       .link-card { text-decoration: none; transition: transform .15s ease, box-shadow .15s ease; }
       .link-card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(15,23,42,.08); }
       .section { margin-top: 18px; }
       .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-      .step-number { width: 34px; height: 34px; border-radius: 12px; background: #0f172a; color: white; display: grid; place-items: center; font-weight: 900; margin-bottom: 10px; }
+      .step-number { width: 34px; height: 34px; border-radius: 12px; background: #07132d; color: white; display: grid; place-items: center; font-weight: 900; margin-bottom: 10px; }
       form { display: grid; gap: 10px; }
       label { font-weight: 800; font-size: 13px; color: #334155; }
       input, textarea, select { width: 100%; border: 1px solid #cbd5e1; border-radius: 16px; padding: 13px 14px; font: inherit; color: #0f172a; background: white; }
@@ -48,6 +49,7 @@
       .generated { display: none; margin-top: 12px; background: #ecfeff; border: 1px solid #a5f3fc; border-radius: 18px; padding: 14px; }
       .generated.show { display: block; }
       .footer { text-align: center; color: #94a3b8; padding: 24px 0 10px; font-size: 13px; }
+      @media (max-width: 920px) { .grid { grid-template-columns: repeat(2, 1fr); } }
       @media (max-width: 780px) { .topbar-inner { align-items: flex-start; flex-direction: column; } .hero { grid-template-columns: 1fr; } .grid, .steps { grid-template-columns: 1fr; } .actions, .form-row { grid-template-columns: 1fr; } .card { padding: 20px; border-radius: 24px; } }
     </style>
   </head>
@@ -56,7 +58,7 @@
       <div class="shell">
         <header class="topbar">
           <div class="topbar-inner">
-            <div class="brand"><div class="mini-logo">SF</div><span>ShopFlow DZ Beta</span></div>
+            <div class="brand"><div class="mini-logo"><img src="/icon.svg" alt="ShopFlow DZ" /></div><span>ShopFlow DZ Beta</span></div>
             <nav class="nav" aria-label="Navigation beta">
               <a href="#accueil">Accueil</a>
               <a href="#liens">Liens</a>
@@ -69,7 +71,7 @@
 
         <section id="accueil" class="hero">
           <div class="card">
-            <div class="logo">SF</div>
+            <div class="logo"><img src="/icon.svg" alt="ShopFlow DZ" /></div>
             <span class="badge">Beta test - Algérie</span>
             <h1>Gère tes commandes sans cahier ni Excel.</h1>
             <p>ShopFlow DZ aide les vendeuses Instagram, WhatsApp et Facebook à suivre leurs commandes, acomptes, clientes, livraisons et bénéfices depuis le téléphone.</p>
@@ -89,13 +91,14 @@
 
         <section id="liens" class="section card">
           <h2>Tout au même endroit</h2>
-          <p>Utilise cette page comme le centre de la beta : application, guide, FAQ, confidentialité, conditions et contact.</p>
+          <p>Utilise cette page comme le centre de la beta : application, guide, FAQ, confidentialité, conditions, tarifs et contact.</p>
           <div class="grid">
             <a class="link-card" href="/"><strong>Application</strong><span>Accéder à ShopFlow DZ</span></a>
             <a class="link-card" href="/guide.html"><strong>Guide</strong><span>Comment utiliser l'app</span></a>
             <a class="link-card" href="/faq.html"><strong>FAQ</strong><span>Questions fréquentes</span></a>
             <a class="link-card" href="/privacy.html"><strong>Confidentialité</strong><span>Données et sécurité</span></a>
             <a class="link-card" href="/terms.html"><strong>Conditions beta</strong><span>Règles d'utilisation</span></a>
+            <a class="link-card" href="/pricing.html"><strong>Tarifs beta</strong><span>Prix indicatifs</span></a>
           </div>
         </section>
 
