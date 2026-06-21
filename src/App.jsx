@@ -1,3 +1,3 @@
-import AppReports from "./AppReports.jsx";
+import AppBetaFixes from "./AppBetaFixes.jsx";
 
-export default AppReports;
+export default AppBetaFixes;
