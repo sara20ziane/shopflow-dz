@@ -1,6 +1,6 @@
 ShopFlow DZ
-Version de test: ux-clean-logo-reset-v2
+Version de test: logout-visible-v1
 Date: 2026-06-21
-But: supprimer le doublon visuel et rendre mot de passe oublie plus clair.
+But: rendre le bouton deconnexion visible meme sur mobile.
 
-Si tu vois ux-clean-logo-reset-v2, le deploiement de cette correction fonctionne.
+Si tu vois logout-visible-v1, le deploiement de cette correction fonctionne.
