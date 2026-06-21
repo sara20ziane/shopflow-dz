@@ -1,6 +1,6 @@
 ShopFlow DZ
-Version de test: ux-clean-logo-reset-v1
+Version de test: ux-clean-logo-reset-v2
 Date: 2026-06-21
-But: verifier la correction double logo + explication mot de passe oublie.
+But: supprimer le doublon visuel et rendre mot de passe oublie plus clair.
 
-Si tu vois ux-clean-logo-reset-v1 sur https://shopflow-dz.vercel.app/version.txt, le deploiement de cette correction fonctionne.
+Si tu vois ux-clean-logo-reset-v2, le deploiement de cette correction fonctionne.
