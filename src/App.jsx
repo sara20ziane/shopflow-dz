@@ -1,3 +1,3 @@
-import AppBetaFixes from "./AppBetaFixes.jsx";
+import AppVisibleFixes from "./AppVisibleFixes.jsx";
 
-export default AppBetaFixes;
+export default AppVisibleFixes;
