@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ShopFlow DZ - Roadmap beta</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Arial, sans-serif; background: #f1f5f9; color: #0f172a; }
+      a { color: inherit; }
+      .page { min-height: 100vh; padding: 18px; }
+      .shell { width: 100%; max-width: 920px; margin: 0 auto; }
+      .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: white; border: 1px solid #e2e8f0; border-radius: 24px; padding: 12px 14px; box-shadow: 0 12px 30px rgba(15,23,42,.06); margin-bottom: 18px; }
+      .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; }
+      .logo { width: 42px; height: 42px; border-radius: 14px; background: #07132d; overflow: hidden; display: grid; place-items: center; }
+      .logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .back { text-decoration: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 999px; padding: 10px 13px; font-size: 13px; font-weight: 800; color: #334155; }
+      .hero { background: #07132d; color: white; border-radius: 34px; padding: 32px; box-shadow: 0 24px 55px rgba(7,19,45,.22); }
+      .hero p { color: #cbd5e1; }
+      .badge { display: inline-block; background: rgba(34,211,238,.16); color: #67e8f9; padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 900; margin-bottom: 14px; }
+      h1 { margin: 0; font-size: clamp(32px, 6vw, 52px); line-height: 1.02; letter-spacing: -1.3px; }
+      h2 { margin: 0 0 12px; font-size: 26px; letter-spacing: -.6px; }
+      h3 { margin: 0 0 8px; font-size: 18px; }
+      p { color: #475569; line-height: 1.65; margin: 10px 0; }
+      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 18px; }
+      .card { background: white; border: 1px solid #e2e8f0; border-radius: 26px; padding: 22px; box-shadow: 0 18px 45px rgba(15,23,42,.07); }
+      .phase { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 8px 11px; font-size: 12px; font-weight: 900; margin-bottom: 14px; }
+      .now { background: #dcfce7; color: #166534; }
+      .next { background: #e0f2fe; color: #0369a1; }
+      .later { background: #fef3c7; color: #92400e; }
+      ul { margin: 12px 0 0; padding-left: 20px; color: #475569; line-height: 1.7; }
+      .cta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+      .button { display: block; text-align: center; text-decoration: none; padding: 15px 14px; border-radius: 18px; font-weight: 900; border: 1px solid #e2e8f0; }
+      .primary { background: #07132d; color: white; border-color: #07132d; }
+      .secondary { background: white; color: #0f172a; }
+      .footer { text-align: center; color: #94a3b8; padding: 24px 0 10px; font-size: 13px; }
+      @media (max-width: 760px) { .topbar { align-items: flex-start; flex-direction: column; } .grid, .cta { grid-template-columns: 1fr; } .hero { padding: 24px; border-radius: 28px; } .card { border-radius: 22px; } }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <div class="shell">
+        <header class="topbar">
+          <div class="brand"><div class="logo"><img src="/icon.svg" alt="ShopFlow DZ" /></div><span>ShopFlow DZ</span></div>
+          <a class="back" href="/beta.html">Retour au centre beta</a>
+        </header>
+
+        <section class="hero">
+          <span class="badge">Roadmap beta</span>
+          <h1>Ce qu'on construit avec les vendeuses.</h1>
+          <p>Cette page montre les prochaines étapes de ShopFlow DZ. L'objectif est simple : construire une application utile, légère et adaptée aux vendeuses Instagram, WhatsApp et Facebook en Algérie.</p>
+        </section>
+
+        <section class="grid">
+          <article class="card">
+            <span class="phase now">Disponible maintenant</span>
+            <h2>Base de gestion</h2>
+            <p>Les fonctions essentielles pour tester avec de vraies commandes.</p>
+            <ul>
+              <li>Commandes et statuts</li>
+              <li>Acomptes et reste à encaisser</li>
+              <li>Suivi livraison</li>
+              <li>Fiches clientes</li>
+              <li>Mode light / night</li>
+              <li>FR / AR</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <span class="phase next">Prochaine version</span>
+            <h2>Ventes & bénéfices</h2>
+            <p>Améliorer le suivi financier pour savoir ce qui rapporte vraiment.</p>
+            <ul>
+              <li>Charges et dépenses</li>
+              <li>Bénéfice net</li>
+              <li>Résumé par période</li>
+              <li>Produits les plus vendus</li>
+              <li>Alertes de paiement restant</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <span class="phase later">Plus tard</span>
+            <h2>Automatisation</h2>
+            <p>Gagner encore plus de temps quand la base est validée.</p>
+            <ul>
+              <li>Messages WhatsApp plus personnalisés</li>
+              <li>Export PDF / Excel</li>
+              <li>Catalogue simple</li>
+              <li>Statistiques avancées</li>
+              <li>Multi-utilisateurs par boutique</li>
+            </ul>
+          </article>
+        </section>
+
+        <section class="card" style="margin-top: 18px;">
+          <h2>Tu veux influencer la roadmap ?</h2>
+          <p>Les retours beta comptent beaucoup. Dis-nous ce qui manque, ce qui te bloque ou ce qui te ferait gagner du temps dans ta boutique.</p>
+          <div class="cta">
+            <a class="button primary" href="https://forms.gle/GRQdaEV5hJwQpPhy6" target="_blank" rel="noopener">Envoyer un retour beta</a>
+            <a class="button secondary" href="https://www.instagram.com/shopflowdz/" target="_blank" rel="noopener">Contacter sur Instagram</a>
+          </div>
+        </section>
+
+        <div class="footer">Version beta privée - ShopFlow DZ</div>
+      </div>
+    </main>
+  </body>
+</html>
