@@ -3,17 +3,36 @@ import AppCorrected from "./AppCorrected.jsx";
 
 const RESET_FR = {
   title: "Mot de passe oublié ?",
-  line1: "Écris ton email dans le champ email.",
-  line2: "Clique ici pour recevoir le lien de réinitialisation.",
-  line3: "Vérifie ta boîte mail et les spams.",
+  help: "Écris ton email au-dessus, puis clique sur le bouton.",
+  action: "Envoyer le lien de réinitialisation",
 };
 
 const RESET_AR = {
   title: "نسيت كلمة المرور؟",
-  line1: "اكتبي بريدك الإلكتروني في خانة البريد.",
-  line2: "اضغطي هنا لاستلام رابط إعادة التعيين.",
-  line3: "راجعي البريد الوارد أو الرسائل غير المرغوبة.",
+  help: "اكتبي بريدك الإلكتروني في الأعلى ثم اضغطي على الزر.",
+  action: "إرسال رابط إعادة التعيين",
 };
+
+function cleanHeaderBranding() {
+  document.querySelectorAll("header").forEach((header) => {
+    header.querySelectorAll('img[alt="ShopFlow DZ"], img[src*="shopflow-logo"]').forEach((img) => {
+      img.style.display = "none";
+    });
+
+    header.querySelectorAll("p").forEach((p) => {
+      const text = (p.textContent || "").trim().toLowerCase();
+      if (text === "shopflow dz") {
+        p.style.display = "none";
+      }
+    });
+  });
+
+  document.querySelectorAll("h1, h2").forEach((title) => {
+    const text = (title.textContent || "").trim();
+    if (text === "Bienvenue sur ShopFlow DZ") title.textContent = "Bienvenue";
+    if (text === "مرحبا بك في ShopFlow DZ") title.textContent = "مرحبا بك";
+  });
+}
 
 function patchResetButton() {
   const isArabic = document.documentElement.dir === "rtl";
@@ -25,18 +44,22 @@ function patchResetButton() {
 
     if (!isResetButton) return;
 
-    const signature = `${copy.title}|${copy.line1}|${copy.line2}|${copy.line3}`;
+    const signature = `${copy.title}|${copy.help}|${copy.action}`;
     if (button.dataset.shopflowResetPatched === signature) return;
 
     button.dataset.shopflowReset = "true";
     button.dataset.shopflowResetPatched = signature;
     button.innerHTML = `
       <span class="shopflow-reset-title">${copy.title}</span>
-      <span class="shopflow-reset-step">1. ${copy.line1}</span>
-      <span class="shopflow-reset-step">2. ${copy.line2}</span>
-      <span class="shopflow-reset-step">3. ${copy.line3}</span>
+      <span class="shopflow-reset-help">${copy.help}</span>
+      <span class="shopflow-reset-action">${copy.action}</span>
     `;
   });
+}
+
+function applyUxCleanups() {
+  cleanHeaderBranding();
+  patchResetButton();
 }
 
 export default function AppUxClean() {
@@ -44,7 +67,13 @@ export default function AppUxClean() {
     const style = document.createElement("style");
     style.setAttribute("data-shopflow-ux-clean", "true");
     style.textContent = `
-      header .min-w-0 p:nth-child(2) {
+      header img[alt="ShopFlow DZ"],
+      header img[src*="shopflow-logo"] {
+        display: none !important;
+      }
+
+      header .min-w-0 p:nth-child(2),
+      header p.shopflow-duplicate-brand {
         display: none !important;
       }
 
@@ -56,51 +85,62 @@ export default function AppUxClean() {
       button[data-shopflow-reset="true"] {
         display: flex !important;
         flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 0.35rem !important;
+        align-items: stretch !important;
+        gap: 0.45rem !important;
         text-align: left !important;
-        border-radius: 1.25rem !important;
-        border: 2px solid #00c4b4 !important;
-        background: rgba(0, 229, 255, 0.10) !important;
-        padding: 0.9rem 1rem !important;
+        border-radius: 1rem !important;
+        border: 1px solid rgba(0, 196, 180, 0.55) !important;
+        background: rgba(0, 229, 255, 0.08) !important;
+        padding: 0.85rem !important;
         color: #07142b !important;
       }
 
       html[dir="rtl"] button[data-shopflow-reset="true"] {
-        align-items: flex-end !important;
         text-align: right !important;
       }
 
       button[data-shopflow-reset="true"] .shopflow-reset-title {
-        font-size: 0.95rem !important;
+        font-size: 0.9rem !important;
         font-weight: 900 !important;
         color: #07142b !important;
       }
 
-      button[data-shopflow-reset="true"] .shopflow-reset-step {
+      button[data-shopflow-reset="true"] .shopflow-reset-help {
         font-size: 0.78rem !important;
-        font-weight: 700 !important;
-        line-height: 1.2rem !important;
-        color: rgba(7, 20, 43, 0.82) !important;
+        font-weight: 600 !important;
+        line-height: 1.15rem !important;
+        color: rgba(7, 20, 43, 0.72) !important;
+      }
+
+      button[data-shopflow-reset="true"] .shopflow-reset-action {
+        margin-top: 0.1rem !important;
+        display: inline-flex !important;
+        justify-content: center !important;
+        border-radius: 0.8rem !important;
+        background: linear-gradient(90deg, #00E5FF, #00C4B4) !important;
+        padding: 0.55rem 0.75rem !important;
+        font-size: 0.82rem !important;
+        font-weight: 900 !important;
+        color: #07142b !important;
       }
 
       .bg-\[\#07142B\] button[data-shopflow-reset="true"],
       main.bg-\[\#07142B\] button[data-shopflow-reset="true"] {
-        background: rgba(0, 229, 255, 0.12) !important;
+        background: rgba(0, 229, 255, 0.10) !important;
         color: #ffffff !important;
       }
 
       .bg-\[\#07142B\] button[data-shopflow-reset="true"] .shopflow-reset-title,
       main.bg-\[\#07142B\] button[data-shopflow-reset="true"] .shopflow-reset-title,
-      .bg-\[\#07142B\] button[data-shopflow-reset="true"] .shopflow-reset-step,
-      main.bg-\[\#07142B\] button[data-shopflow-reset="true"] .shopflow-reset-step {
+      .bg-\[\#07142B\] button[data-shopflow-reset="true"] .shopflow-reset-help,
+      main.bg-\[\#07142B\] button[data-shopflow-reset="true"] .shopflow-reset-help {
         color: #ffffff !important;
       }
     `;
     document.head.appendChild(style);
 
-    patchResetButton();
-    const observer = new MutationObserver(() => patchResetButton());
+    applyUxCleanups();
+    const observer = new MutationObserver(() => applyUxCleanups());
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
 
     return () => {
