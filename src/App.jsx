@@ -1,3 +1,3 @@
-import AppRedesign from "./AppRedesign.jsx";
+import AppReports from "./AppReports.jsx";
 
-export default AppRedesign;
+export default AppReports;
