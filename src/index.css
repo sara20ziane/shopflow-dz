@@ -17,35 +17,23 @@ body {
   background: #f5f7fb;
 }
 
-/* Remplace l'ancien carré SF par le logo ShopFlow sur l'écran d'accueil */
-.w-20.h-20.mx-auto.rounded-3xl.bg-slate-900.flex.items-center.justify-center {
-  width: 160px !important;
-  height: 90px !important;
-  border-radius: 26px !important;
-  background: #ffffff url("/logo-shopflow.svg") center / contain no-repeat !important;
-  box-shadow: 0 18px 45px rgba(7, 19, 45, 0.14) !important;
+.primary-btn {
+  border-radius: 1rem;
+  background: linear-gradient(135deg, var(--shopflow-cyan), var(--shopflow-turquoise));
+  color: var(--shopflow-navy);
+  font-weight: 900;
+  padding: 0.9rem 1rem;
+  box-shadow: 0 18px 35px rgba(0, 196, 180, 0.22);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
-.w-20.h-20.mx-auto.rounded-3xl.bg-slate-900.flex.items-center.justify-center > span {
-  display: none !important;
+.primary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 20px 45px rgba(0, 196, 180, 0.3);
 }
 
-/* Ajoute le logo dans le header de l'application après connexion */
-header > div > div:first-child {
-  position: relative;
-  min-height: 50px;
-  padding-left: 58px;
-}
-
-header > div > div:first-child::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 46px;
-  height: 46px;
-  transform: translateY(-50%);
-  border-radius: 16px;
-  background: var(--shopflow-navy) url("/icon.svg") center / 78% no-repeat;
-  box-shadow: 0 10px 25px rgba(7, 19, 45, 0.18);
+.primary-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
 }
