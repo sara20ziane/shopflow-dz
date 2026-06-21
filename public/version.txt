@@ -1,0 +1,7 @@
+ShopFlow DZ
+Version de test: diagnostic-cache-v1
+Date: 2026-06-21
+But: vérifier si Vercel redéploie vraiment la dernière version GitHub.
+
+Si tu vois ce fichier sur https://shopflow-dz.vercel.app/version.txt, le déploiement fonctionne.
+Si tu ne le vois pas, Vercel ne déploie pas la dernière version ou le site pointe vers un autre projet/branche.
