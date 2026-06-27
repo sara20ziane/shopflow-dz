@@ -1,6 +1,6 @@
 ShopFlow DZ
-Version de test: logout-visible-v1
+Version de test: sales-assistant-mvp-v1
 Date: 2026-06-21
-But: rendre le bouton deconnexion visible meme sur mobile.
+But: ajouter Assistant de vente IA avec templates intelligents, copie et sauvegarde.
 
-Si tu vois logout-visible-v1, le deploiement de cette correction fonctionne.
+Si tu vois sales-assistant-mvp-v1, le deploiement de cette fonctionnalite fonctionne.
