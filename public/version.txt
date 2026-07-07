@@ -1,6 +1,6 @@
 ShopFlow DZ
-Version de test: sales-assistant-mvp-v1
+Version de test: subscription-gate-v1
 Date: 2026-06-21
-But: ajouter Assistant de vente IA avec templates intelligents, copie et sauvegarde.
+But: bloquer l'application pour les comptes non actives ou expires, avec activation manuelle.
 
-Si tu vois sales-assistant-mvp-v1, le deploiement de cette fonctionnalite fonctionne.
+Si tu vois subscription-gate-v1, le deploiement de cette correction fonctionne.
