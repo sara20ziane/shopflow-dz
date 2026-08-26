@@ -20,6 +20,7 @@
   })();
   const medium = params.get("utm_medium") || "";
   const campaign = params.get("utm_campaign") || "";
+  const content = params.get("utm_content") || "";
 
   function track(event) {
     fetch("/api/track", {
@@ -32,6 +33,7 @@
         source,
         medium,
         campaign,
+        content,
         path,
       }),
     }).catch(() => {});
