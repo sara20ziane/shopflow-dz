@@ -3,15 +3,45 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0f172a" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/shopflow-brand.css" />
+    <meta name="theme-color" content="#07142B" />
     <title>ShopFlow DZ</title>
+    <script>
+      (() => {
+        const path = window.location.pathname.replace(/\/+$/, "") || "/";
+        const calculatorRoutes = ["/calculateur", "/calculateur-business", "/business-calculator"];
+        const isCalculator = calculatorRoutes.includes(path);
+
+        if (isCalculator) {
+          document.title = "Calculateur Business DZ — NSEYER";
+          return;
+        }
+
+        const manifest = document.createElement("link");
+        manifest.rel = "manifest";
+        manifest.href = "/manifest.webmanifest";
+        document.head.appendChild(manifest);
+
+        const icon = document.createElement("link");
+        icon.rel = "icon";
+        icon.href = "/icon.svg";
+        icon.type = "image/svg+xml";
+        document.head.appendChild(icon);
+
+        const brandCss = document.createElement("link");
+        brandCss.rel = "stylesheet";
+        brandCss.href = "/shopflow-brand.css";
+        document.head.appendChild(brandCss);
+
+        window.addEventListener("DOMContentLoaded", () => {
+          const brandScript = document.createElement("script");
+          brandScript.src = "/shopflow-brand.js";
+          document.body.appendChild(brandScript);
+        });
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <script src="/shopflow-brand.js" defer></script>
   </body>
 </html>
