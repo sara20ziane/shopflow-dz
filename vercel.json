@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/calculateur", "destination": "/index.html" },
+    { "source": "/calculateur-business", "destination": "/index.html" },
+    { "source": "/business-calculator", "destination": "/index.html" }
+  ]
+}
