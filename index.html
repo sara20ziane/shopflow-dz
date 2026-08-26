@@ -13,6 +13,12 @@
 
         if (isCalculator) {
           document.title = "Calculateur Business DZ — NSEYER";
+          window.addEventListener("DOMContentLoaded", () => {
+            const analyticsScript = document.createElement("script");
+            analyticsScript.src = "/nseyer-analytics.js";
+            analyticsScript.defer = true;
+            document.body.appendChild(analyticsScript);
+          });
           return;
         }
 
