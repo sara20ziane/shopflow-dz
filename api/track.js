@@ -38,6 +38,7 @@ export default function handler(req, res) {
     source: clean(body.source, 80) || "direct",
     medium: clean(body.medium, 80),
     campaign: clean(body.campaign, 100),
+    content: clean(body.content, 100),
     path: clean(body.path, 120),
     occurredAt: new Date().toISOString(),
   };
